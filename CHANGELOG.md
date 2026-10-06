@@ -3,6 +3,14 @@
 Historique complet, unifié et simplifié du player. Les versions techniques intermédiaires
 (202610.x) sont regroupées par thème ; l'historique détaillé lot par lot reste archivé.
 
+## 202610.62.1 — Allègement du build public
+
+- Le `index.html` public est allégé de 38 % (702 → 436 Ko) : les commentaires
+  d'historique et de design sont supprimés du build tout-en-un ; seuls les avis de
+  licence obligatoires (Megachur, « MODIFIED October 2026 », Okumura) et l'en-tête de
+  release sont conservés. Aucun changement fonctionnel — le code est identique.
+- Cache du service worker renommé `ay-player-202610.62.1` (unique rechargement réseau).
+
 ## 202610.62.0 — Première release publique (cpcepower/ay-player)
 
 - **Build tout-en-un public** : `index.html` unique contenant tout le player (18 scripts +
@@ -14,7 +22,7 @@ Historique complet, unifié et simplifié du player. Les versions techniques int
   le commentaire-changelog géant du HTML sont remplacés par un en-tête court pointant ici.
   Les avis de licence « MODIFIED October 2026 » et les blocs Megachur sont conservés.
 - **Licence** : diffusion sous PolyForm Noncommercial 1.0.0, avec THIRD-PARTY.md
-  (Megachur, Okumura/LZH, ZXTune, cpc-power).
+  (Megachur, Arnaud Carré/StSound, Okumura/LZH, Arkos Tracker 3, ZXTune, cpc-power).
 - État technique = lot 202610.61.18 (voir ci-dessous), rendu sonore validé à l'oreille.
 
 ## 202610.53 – 202610.61 — Fidélité matérielle et interface (condensé)
