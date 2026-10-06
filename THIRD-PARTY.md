@@ -22,11 +22,11 @@ Les sémantiques des formats trackers (STP, PSM, ST3, ST1, PSC, SQT, PT, TS, tab
 ont été transcrites à titre de référence comportementale depuis les sources de ZXTune
 (vitamin.caig, GPL). Aucun code ZXTune n'est intégré.
 
-## Arkos Tracker 3 — Julien Néo (Targhan)
+## Arkos Tracker 3 — Julien Nevo (Targhan)
 Le décodeur AKG (format natif d'Arkos Tracker 3, export song « AT30 ») reproduit le
 comportement du player AKG officiel (Arkos Tracker 3, GPL v3), transcrit à titre de
 référence — aucun code du player officiel n'est intégré. Les autres exports Arkos
-(AKY, AKM, AKS) ne sont pas supportés.
+(AKY, AKM, AKS) ne sont pas encore supportés.
 
 ## cpc-power.com
 Hébergeur du player original et source des dumps YM ; voir www.cpc-power.com.
