@@ -21,11 +21,11 @@ et fonctionne ensuite intégralement hors ligne (service worker).
 
 | Famille | Formats |
 |---|---|
-| Dumps YM (StSound) | YM1!, YM2!, YM3!, YM3b!, YM5!, YM6! (lzh / non compressé), intercalés ou non |
-| Dumps de registres | PSG (Atari ST / ZX), AYC (Amstrad CPC), VTX `ym` et `ay` |
-| VGM | VGM avec puce YM2149 / AY-3-8910 |
-| Trackers ZX / CPC compilés | PT3/PT2 (Pro Tracker), ASC Sound Master, STP (Sound Tracker Pro), ST3 (Sound Tracker v3), PSM (Pro Sound Maker), PSC (Pro Sound Creator), SQT (SQ-Tracker), ST1 (Sound Tracker v1 non compilé), TurboSound (2 puces) |
-| Compression | LZH (arcs LHA des dumps YM) |
+| Dumps YM (StSound) | YM2!, YM3!, YM3b, YM5!, YM6! (+ digidrums, intercalés ou non, compressés LZH ou non) |
+| Dumps de registres | PSG / EPSG (Atari ST / ZX), AYC (Amstrad CPC), VTX `ym` et `ay` |
+| VGM | VGM / VGZ avec puce YM2149 / AY-3-8910 |
+| Trackers ZX / CPC | AKG (Arkos Tracker 3), PT3/PT2/PT1 (Pro Tracker), ASC Sound Master, STC/ST1/ST3 (Sound Tracker), STP (Sound Tracker Pro), PSM (Pro Sound Maker), PSC (Pro Sound Creator), SQT (SQ-Tracker), TurboSound (2 puces) |
+| Audio simple | MP3, WAV, OGG/OGA, FLAC (décodés par le navigateur) |
 
 Fonctions : playlist, visualiseur d'ondes par canal, vue des registres AY, choix de la puce
 (AY-3-8910 / YM2149) et de l'horloge, coupure A/B/C, disposition stéréo ABC/ACB, mode compact,
