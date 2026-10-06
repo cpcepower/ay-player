@@ -1,3 +1,13 @@
+lot 202610.63.0 — volume sur l audio simple + volume persiste
+
+- Volume : le reglage suit maintenant AUSSI les fichiers audio simples (WAV, MP3, OGG, OGA,
+  FLAC) — il ne pilotait que le moteur AY/YM. Une unique fonction applyVolume() route le
+  niveau vers les deux sorties (graphe Web Audio du chip + element <audio> du fichier simple).
+- Volume : le niveau est persiste (localStorage ayplayer.volume) et restaure au demarrage
+  (l ancien reglage force a 1.0 disparait). Valeur aberrante stockee -> repli propre sur 1.0.
+- Un chargement de fichier simple prend le niveau courant du slider des la premiere lecture.
+- Service worker : cache ay-player-202610.63.0 (un rechargement reseau force une fois).
+
 # Changelog AY Player
 
 Historique complet, unifié et simplifié du player. Les versions techniques intermédiaires

@@ -1,4 +1,4 @@
-<!DOCTYPE html><!-- SINGLE-FILE RELEASE BUILD 202610.62.1 — all-in-one public build: the 18 scripts and the stylesheet are inlined; non-license comments stripped (license notices preserved). -->
+<!DOCTYPE html><!-- SINGLE-FILE RELEASE BUILD 202610.63.0 — all-in-one public build: the 18 scripts and the stylesheet are inlined; non-license comments stripped (license notices preserved). -->
 <HTML lang="fr">
 <HEAD>
 <meta charset="UTF-8"/>
@@ -6,7 +6,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='2' fill='%23101214'/%3E%3Cpath d='M1 8h2l2-5 2 10 2-8 2 3h4' fill='none' stroke='%234fd18b' stroke-width='1.5' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E"/>
 <meta name="theme-color" content="#101214"/>
 <!-----------------------------------------------------------------------------
-  AY Player — release 202610.62.1 (public end-user build, single-file).
+  AY Player — release 202610.63.0 (public end-user build, single-file).
 
   Copyright (c) 2016-2026 Yoann Courtois aka Megachur — original YM/AY player,
   freeware for non-commercial purposes. Modified October 2026 by cpcepower:
@@ -15,7 +15,7 @@
   Full change history: CHANGELOG.md. Third-party notices: THIRD-PARTY.md.
   License: LICENSE (PolyForm Noncommercial 1.0.0).
 ------------------------------------------------------------------------------>
-<TITLE>AY Player (YM, dumps, trackers...) - 202610.62.1</TITLE>
+<TITLE>AY Player (YM, dumps, trackers...) - 202610.63.0</TITLE>
 
 <script>
 
@@ -11773,6 +11773,34 @@ var extFile="";
 var wavAudio=null;
 var percent=0;
 
+function applyVolume(v) {
+	v=Number(v);
+	if(!isFinite(v)) { v=1; }
+	if(v<0) { v=0; }
+	if(v>1) { v=1; }
+	try { localStorage.setItem("ayplayer.volume",""+v); } catch(e) {}
+	try { ymMusic.setVolume(v); } catch(e) {}
+	if(wavAudio!=null) { try { wavAudio.volume=v; } catch(e) {} }
+	return v;
+}
+function restoreVolume() {
+	var v=1;
+	try {
+		if(typeof localStorage!=="undefined") {
+			var s=localStorage.getItem("ayplayer.volume");
+			if(s!=null&&s!=="") { var n=Number(s); if(isFinite(n)&&n>=0&&n<=1) { v=n; } }
+		}
+	} catch(e) {}
+	var sl=document.getElementById('setVolume');
+	if(sl!=null) {
+		sl.value=v;
+		var out=document.getElementById('outputrange');
+		if(out!=null) { out.value=v; }
+		applyVolume(v);
+	}
+	return v;
+}
+
 function audioExt() {
 
 	if(extFile=="WAV") {
@@ -12815,6 +12843,7 @@ function loadFile(t_name, sizetest, param) {
 		reader.onloadend=function(evt) {
 			wavAudio=new Audio(evt.target.result);
 			wavAudio.loop=true;
+			try { wavAudio.volume=Number(document.getElementById('setVolume').value); } catch(e) {}
 
 			wavAudio.addEventListener("loadedmetadata", function() { refreshCartouche(null); });
 			refreshCartouche(null);
@@ -14100,7 +14129,7 @@ function selectDropFiles(fileList) {
 		<button id="random" class="key toggle" type="button" onclick="randomNext=!randomNext;updateToggleLabels();"><span class="led" aria-hidden="true"></span>Random NO</button>
 		<span id="labelVolume">Volume :</span>
 		<form id="formSetVolume" onsubmit="return false" oninput="outputrange.value=setVolume.value;">
-		<input type="range" id="setVolume" name="setVolume" list="tickmarks" value="1.00" max="1.00" min="0.0" step="0.10" onchange="try {ymMusic.setVolume(setVolume.value);} catch(e) {};"/>
+		<input type="range" id="setVolume" name="setVolume" list="tickmarks" value="1.00" max="1.00" min="0.0" step="0.10" onchange="try {applyVolume(setVolume.value);} catch(e) {};"/>
 		<datalist id="tickmarks">
 		  <option value="0.00" label="0%">
 		  <option value="0.10">
@@ -14186,13 +14215,12 @@ https://oku.edu.mie-u.ac.jp/~okumura/compression/ar002/<br>
 Adapted to javascript for YM emulation &copy; 2016-2026 Megachur
 		</p>
 	<p>AY Player — <a href="https://www.cpc-power.com/" target="_blank" rel="noopener">www.cpc-power.com</a> — Langages : HTML5 / JavaScript — Conforme W3C</p>
-	<span id="appVersion" class="foot-version">202610.62.1</span>
+	<span id="appVersion" class="foot-version">202610.63.0</span>
 	<button id="schemeToggle" class="power" type="button" onclick="toggleScheme();" aria-pressed="false" aria-label="Toggle light/dark color scheme" title="Toggle light/dark color scheme"><i class="power-led" aria-hidden="true"></i>ON</button>
 </footer>
 </main>
 <script>
-	document.getElementById('setVolume').value=1.0;
-	document.getElementById('setVolume').onchange();
+	restoreVolume();
 
 	var ymMusicName=document.getElementById('ymMusicName');
 
