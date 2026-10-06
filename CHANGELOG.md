@@ -1,3 +1,14 @@
+lot 202610.63.1 — barre de progression style VLC
+
+- Barre de progression : piste horizontale FINE (10 px) grise et arrondie, remplissage en
+  degradé vert clair -> fonce (#6ee7a0 -> #2f9e63), petit ovale ORANGE a contour blanc
+  (poignee) a la fin du remplissage, valeur en pourcentage a DROITE de la barre (couleur
+  du theme, lisible en clair et en sombre, sur tous les skins).
+- La poignee suit la lecture (repliee entre 1 et 99 % pour ne jamais sortir de la piste).
+- Le clic sur la barre pour se deplacer dans le morceau est INCANGE (fichiers simples et
+  musique a puce).
+- Service worker : cache ay-player-202610.63.1 (un rechargement reseau force une fois).
+
 lot 202610.63.0 — volume sur l audio simple + volume persiste
 
 - Volume : le reglage suit maintenant AUSSI les fichiers audio simples (WAV, MP3, OGG, OGA,

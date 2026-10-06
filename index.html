@@ -1,4 +1,4 @@
-<!DOCTYPE html><!-- SINGLE-FILE RELEASE BUILD 202610.63.0 — all-in-one public build: the 18 scripts and the stylesheet are inlined; non-license comments stripped (license notices preserved). -->
+<!DOCTYPE html><!-- SINGLE-FILE RELEASE BUILD 202610.63.1 — all-in-one public build: the 18 scripts and the stylesheet are inlined; non-license comments stripped (license notices preserved). -->
 <HTML lang="fr">
 <HEAD>
 <meta charset="UTF-8"/>
@@ -6,7 +6,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='2' fill='%23101214'/%3E%3Cpath d='M1 8h2l2-5 2 10 2-8 2 3h4' fill='none' stroke='%234fd18b' stroke-width='1.5' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E"/>
 <meta name="theme-color" content="#101214"/>
 <!-----------------------------------------------------------------------------
-  AY Player — release 202610.63.0 (public end-user build, single-file).
+  AY Player — release 202610.63.1 (public end-user build, single-file).
 
   Copyright (c) 2016-2026 Yoann Courtois aka Megachur — original YM/AY player,
   freeware for non-commercial purposes. Modified October 2026 by cpcepower:
@@ -15,7 +15,7 @@
   Full change history: CHANGELOG.md. Third-party notices: THIRD-PARTY.md.
   License: LICENSE (PolyForm Noncommercial 1.0.0).
 ------------------------------------------------------------------------------>
-<TITLE>AY Player (YM, dumps, trackers...) - 202610.63.0</TITLE>
+<TITLE>AY Player (YM, dumps, trackers...) - 202610.63.1</TITLE>
 
 <script>
 
@@ -680,26 +680,35 @@ section.folded > div > .cartouche-title {
 .bar-wrap {
 	position:relative;
 	display:inline-block;
-	width:100%;
+	flex:1 1 auto;
+	width:auto;
 	max-width:800px;
 	vertical-align:middle;
 }
 #progression {
-	margin:0px; border:1px solid var(--border); background:var(--panel); width:100%; height:32px; overflow:hidden; box-sizing:border-box;
+	appearance:none; -webkit-appearance:none;
+	margin:0px; border:0px; background:#9aa0a9; width:100%; height:10px; border-radius:5px; overflow:hidden; box-sizing:border-box; cursor:pointer;
 }
-#progression::-webkit-progress-bar { background:var(--panel); }
-#progression::-webkit-progress-value { background:var(--accent); }
-#progression::-moz-progress-bar { background:var(--accent); }
+#progression::-webkit-progress-bar { background:transparent; }
+#progression::-webkit-progress-value { background:linear-gradient(90deg,#6ee7a0,#2f9e63); }
+#progression::-moz-progress-bar { background:linear-gradient(90deg,#6ee7a0,#2f9e63); }
 .bar-percent {
-	position:absolute;
-	top:0px; left:0px; right:0px; bottom:0px;
-	display:flex;
-	align-items:center;
-	justify-content:center;
 	font-weight:bold;
+	color:var(--fg);
+	white-space:nowrap;
+}
+.bar-handle {
+	position:absolute;
+	top:50%;
+	left:0%;
+	width:18px;
+	height:12px;
+	border-radius:50%;
+	background:#ff9f2e;
+	border:2px solid #ffffff;
+	box-shadow:0 1px 2px rgba(0,0,0,.55);
+	transform:translate(-50%,-50%);
 	pointer-events:none;
-	color:#ffffff;
-	text-shadow:0 0 3px rgba(0,0,0,.9), 0 1px 1px rgba(0,0,0,.85);
 }
 
 body.compact .strip, body.compact .slot,
@@ -12775,6 +12784,7 @@ function update_progressbar() {
 	if(!isNaN(percent)) {
 		document.getElementById('progression').value=percent.toFixed(0);
 		document.getElementById('progressionPercent').innerHTML=percent.toFixed(0)+'%';
+		document.getElementById('progressionHandle').style.left=Math.min(99,Math.max(1,percent)).toFixed(0)+'%';
 	}
 	document.getElementById('progressionTime').innerHTML=timeHtml;
 
@@ -14114,7 +14124,7 @@ function selectDropFiles(fileList) {
 		<input type="file" id="ymMusicName" name="file" accept=".mp3,.wav,.flac,.ogg,.oga,.ym,.ym2,.ym3,.ym5,.ym6,.lzh,.psg,.ayc,.vtx,.vgm,.vgz,.pt3,.pt1,.pt2,.akg,.aks,.sks,.asc,.as0,.stc,.st1,.st,.st3,.stp,.stp2,.psm,.psc,.ts,.sqt" onchange="file_currentidx=0;playlistEpoch++;loadlocalym();updateFileCount();" multiple>
 		<span class="dropzone" id="dropZone" role="button" title="or drop your music files here">or drop your music files here</span>
 	</div>
-	<div class="row row-progress"><span class="bar-wrap"><progress id="progression" value="00" max="100">0%</progress><span id="progressionPercent" class="bar-percent">0%</span></span></div>
+	<div class="row row-progress"><span class="bar-wrap"><progress id="progression" value="00" max="100">0%</progress><span id="progressionHandle" class="bar-handle" aria-hidden="true"></span></span><span id="progressionPercent" class="bar-percent">0%</span></div>
 	<div class="row row-transport">
 		<button id="btnPlayPause" class="key key-transport key-play" type="button" onclick="if(wavAudio!=null) {wavAudio.paused ? wavAudio.play() : wavAudio.pause();} else {ymMusic.playPause();}">Play/Pause</button>
 		<button id="btnStop" class="key key-transport key-stop" type="button" onclick="if(wavAudio!=null) {wavAudio.pause();} else {ymMusic.stop();}">Stop</button>
@@ -14215,7 +14225,7 @@ https://oku.edu.mie-u.ac.jp/~okumura/compression/ar002/<br>
 Adapted to javascript for YM emulation &copy; 2016-2026 Megachur
 		</p>
 	<p>AY Player — <a href="https://www.cpc-power.com/" target="_blank" rel="noopener">www.cpc-power.com</a> — Langages : HTML5 / JavaScript — Conforme W3C</p>
-	<span id="appVersion" class="foot-version">202610.63.0</span>
+	<span id="appVersion" class="foot-version">202610.63.1</span>
 	<button id="schemeToggle" class="power" type="button" onclick="toggleScheme();" aria-pressed="false" aria-label="Toggle light/dark color scheme" title="Toggle light/dark color scheme"><i class="power-led" aria-hidden="true"></i>ON</button>
 </footer>
 </main>
