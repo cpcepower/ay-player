@@ -23,6 +23,7 @@ ont été transcrites à titre de référence comportementale depuis les sources
 (vitamin.caig, GPL). Aucun code ZXTune n'est intégré.
 
 ## Arkos Tracker 3 — Julien Nevo (Targhan)
+Site officiel : https://www.julien-nevo.com/arkostracker/
 Le décodeur AKG (format natif d'Arkos Tracker 3, export song « AT30 ») reproduit le
 comportement du player AKG officiel (Arkos Tracker 3, GPL v3), transcrit à titre de
 référence — aucun code du player officiel n'est intégré. Les autres exports Arkos
