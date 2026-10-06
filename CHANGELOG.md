@@ -1,3 +1,22 @@
+lot 202610.64.0 — decodeur AKY (Arkos Tracker 2/3 streamed export)
+
+- NOUVEAU format : AKY, l'export "streamed" d'Arkos Tracker 2 v1.0 / 3 v1.1 — header
+  (version+endianness, canaux 1-3, frequence PSG 32 bits), linker (duree + 3 offsets de
+  track, boucle), tracks (duree + offset de bloc, 3 octets, duree 0 = 256), RegisterBlocks
+  a etats initiaux puis differences (NSH/SO/HO/SAH, loop tags internes). Pre-rendu 14
+  registres @ 50 Hz, R7 reconstruit chaque frame, R13 ecrit sur changement/retrig
+  (0xff = pas d'ecriture), intro + boucle x2. Gate structurel strict (version 0..7,
+  marche linker complete, cibles dans les donnees).
+- Aucun code Arkos integre : implementation JS originale des semantiques publiees (doc
+  AKY.md du port ST de GGN + PlayerAky Stabilized Z80), meme methode que AKG.
+- Validation : 6 oracles binaires (interleave_this, just_add_cream, knightmare, m,
+  ten_little_endians, you_never_can_tell) — 37/37 (invariants registres, frames
+  manuelles croisees sur l'annotation, gates negatifs, dispatch kernel).
+- UI : libelle du format x3 langues, mention dans l'aide x3, .aky dans le picker.
+- Service worker : cache ay-player-202610.64.0. Version affichee 202610.64.0.
+
+---
+
 lot 202610.63.1 — barre de progression style VLC
 
 - Barre de progression : piste horizontale FINE (10 px) grise et arrondie, remplissage en

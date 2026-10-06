@@ -1,4 +1,4 @@
-<!DOCTYPE html><!-- SINGLE-FILE RELEASE BUILD 202610.63.1 — all-in-one public build: the 18 scripts and the stylesheet are inlined; non-license comments stripped (license notices preserved). -->
+<!DOCTYPE html><!-- SINGLE-FILE RELEASE BUILD 202610.64.0 — all-in-one public build: the 18 scripts and the stylesheet are inlined; non-license comments stripped (license notices preserved). -->
 <HTML lang="fr">
 <HEAD>
 <meta charset="UTF-8"/>
@@ -6,7 +6,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='2' fill='%23101214'/%3E%3Cpath d='M1 8h2l2-5 2 10 2-8 2 3h4' fill='none' stroke='%234fd18b' stroke-width='1.5' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E"/>
 <meta name="theme-color" content="#101214"/>
 <!-----------------------------------------------------------------------------
-  AY Player — release 202610.63.1 (public end-user build, single-file).
+  AY Player — release 202610.64.0 (public end-user build, single-file).
 
   Copyright (c) 2016-2026 Yoann Courtois aka Megachur — original YM/AY player,
   freeware for non-commercial purposes. Modified October 2026 by cpcepower:
@@ -15,7 +15,7 @@
   Full change history: CHANGELOG.md. Third-party notices: THIRD-PARTY.md.
   License: LICENSE (PolyForm Noncommercial 1.0.0).
 ------------------------------------------------------------------------------>
-<TITLE>AY Player (YM, dumps, trackers...) - 202610.63.1</TITLE>
+<TITLE>AY Player (YM, dumps, trackers...) - 202610.64.0</TITLE>
 
 <script>
 
@@ -9046,6 +9046,301 @@ YM_DECODERS.push({ name:"SQT", is:function(d) { return this.isSqt(d); }, init:fu
 
 </script>
 <script type="text/javascript">
+// YM Music emulation (c) 2016 Megachur
+
+// Copyright Yoann Courtois, all rights reserved.
+
+// - This source code is released as freeware for non-commercial purposes.
+// - This entire notice must remain in the source code.
+// MODIFIED October 2026 (notice added per license terms above):
+
+
+YMPlayer.prototype.isAky = function(d) {// structural gate: header + a full linker walk
+	if(d==null||d.length<0x0e) { return false; }
+	var b0=d[0x00]&0xff;
+	if((b0&0x7f)>0x07) { return false; }// format version 0..7 (0 = AT2 v1.0 / AT3 v1.1)
+	var le=(b0&0x80)!=0x00;// bit 7: 1 = little-endian, 0 = big-endian
+	var cc=d[0x01]&0xff;
+	if(cc<0x01||cc>0x03) { return false; }// v1: a single PSG (1-3 channels)
+	var u16=function(off) {
+		var a=d[off]&0xff, b=d[off+0x01]&0xff;
+		return le?(a|(b<<8)):((a<<8)|b);
+	};
+	var hdrSize=0x02+0x04*Math.ceil(cc/0x03);// version + channel count + one dd per PSG
+	if(d.length<hdrSize+0x0a) { return false; }
+	var p=hdrSize, n=0x00, total=0x00;
+	while(true) {
+		if(p+0x08>d.length) { return false; }
+		var dur=u16(p);
+		if(dur==0x00) {// end of the song: the loop target must be an earlier pattern entry
+			var loop=u16(p+0x02);
+			if(loop<hdrSize||loop>=p) { return false; }
+			if(((loop-hdrSize)%0x08)!=0x00) { return false; }
+			return n>0x00;
+		}
+		if(dur>0x8000) { return false; }
+		var i;
+		for(i=0x00;i<0x03;i++) {
+			var t=u16(p+0x02+0x02*i);
+			if(t<hdrSize||t+0x04>d.length) { return false; }// every track entry must be in the data
+		}
+		total+=dur;
+		if(total>0x3a9800) { return false; }// ~24 h at 50 Hz — not a song
+		p+=0x08;
+		n++;
+		if(n>0x400) { return false; }
+	}
+}
+
+YMPlayer.prototype.initAky = function(d) {// AKY — pre-rendered offline into a 14-register dump, like AKG/ASC/STC/PT3/SQT
+	var self=this;
+	var fail=function(msg) {
+		self.supported=false;
+		console.log("AKY: "+msg);
+	};
+	if(d==null||d.length<0x0e) { fail("file too short !"); return; }
+	var dlen=d.length;
+	var le=(d[0x00]&0x80)!=0x00;
+	var ver=d[0x00]&0x7f;
+	var u8=function(off) {
+		if(off<0x00||off>=dlen) { throw "read out of data at "+off; }
+		return d[off]&0xff;
+	};
+	var u16=function(off) {
+		var a=u8(off), b=u8(off+0x01);
+		return le?(a|(b<<8)):((a<<8)|b);
+	};
+	var u32=function(off) {
+		if(le) { return u16(off)|(u16(off+0x02)*0x10000); }
+		return (u16(off)*0x10000)|u16(off+0x02);
+	};
+	var cc=d[0x01]&0xff;
+	if(cc<0x01||cc>0x03) { fail("unsupported channel count "+cc+" (multi-PSG AKY is not supported) !"); return; }
+	var nbPsg=Math.ceil(cc/0x03);
+	var psgFreq=u32(0x02);
+	if(psgFreq<100000||psgFreq>4000000) { fail("unlikely PSG frequency "+psgFreq+" Hz !"); return; }
+	var hdrSize=0x02+0x04*nbPsg;
+	var MAX_FRAMES=65534*3;// ~65 min at 50 Hz, the same ceiling spirit as the other decoders
+
+	var patterns=[];// {dur, tracks:[off,off,off]}
+	var loopPat=-0x01;
+	var p=hdrSize;
+	while(true) {
+		var dur=u16(p);
+		if(dur==0x00) {
+			var loop=u16(p+0x02);
+			loopPat=Math.floor((loop-hdrSize)/0x08);
+			break;
+		}
+		patterns.push({dur:dur, tracks:[u16(p+0x02), u16(p+0x04), u16(p+0x06)]});
+		p+=0x08;
+	}
+	if(loopPat<0x00||loopPat>=patterns.length) { fail("invalid linker loop !"); return; }
+
+	var regs=new Array(14).fill(0x00);// r0..r13, the persistent register state
+	var cur13=0x00;// PsgRegister13 (sticky envelope value)
+	var last13=0xff;// the player's R13 "shadow": R13 is only WRITTEN when the value differs (retrig forces a rewrite)
+	var r13Retrig=0x00;
+	var CH=function() {
+		this.trackPtr=0x00;// file offset of the next Track entry
+		this.blockPtr=0x00;// file offset of the next state inside the current RegisterBlock
+		this.wait=0x00;// frames left before the next Track entry is read (0 = read now)
+		this.initial=true;// the next state of the block is the initial one
+		this.vol=0x00;// volume register value (0-15, or 16 = hardware envelope mode)
+		this.hasSoft=false;// software sound this frame (tone gate in R7)
+		this.noiseOn=false;// noise gate open this frame
+		this.swP=0x0000;// 12-bit software period (sticky, r0..r5)
+	};
+	var chans=[new CH(), new CH(), new CH()];
+
+	var readState=function(ch) {
+		var b=u8(ch.blockPtr); ch.blockPtr++;
+		var initial=ch.initial;
+		ch.initial=false;
+		var type=b&0x03;
+		if(!initial) {
+			var d2=b&0x0f;
+			if(d2==0x08) {// loop tag: dw IMMEDIATELY follows (sequential, Z80 semantics — the ST port is the only one to align)
+				var target=u16(ch.blockPtr); ch.blockPtr+=0x02;
+				if(target<0x02||target>=dlen) { throw "loop target out of data"; }
+				ch.blockPtr=target;
+				b=u8(ch.blockPtr); ch.blockPtr++;
+				type=b&0x03;// a non-initial state is guaranteed after the jump
+			}
+		}
+		var i;
+		if(initial) {
+			if(type==0x00) {// no software, no hardware: 0 vvvv n tt
+				ch.vol=(b>>0x03)&0x0f;
+				ch.hasSoft=false;
+				ch.noiseOn=((b>>0x02)&0x01)!=0x00;
+				if(ch.noiseOn) { regs[0x06]=u8(ch.blockPtr)&0x1f; ch.blockPtr++; }
+			} else if(type==0x01) {// software only: 0 vvvv n tt
+				ch.vol=(b>>0x03)&0x0f;
+				ch.hasSoft=true;
+				ch.noiseOn=((b>>0x02)&0x01)!=0x00;
+				if(ch.noiseOn) { regs[0x06]=u8(ch.blockPtr)&0x1f; ch.blockPtr++; }
+				ch.swP=u16(ch.blockPtr)&0xfff; ch.blockPtr+=0x02;
+			} else if(type==0x02) {// hardware only: eeee n r tt
+				cur13=(b>>0x04)&0x0f;
+				r13Retrig=((b>>0x02)&0x01)!=0x00?0x01:r13Retrig;
+				ch.noiseOn=((b>>0x03)&0x01)!=0x00;
+				if(ch.noiseOn) { regs[0x06]=u8(ch.blockPtr)&0x1f; ch.blockPtr++; }
+				regs[0x0b]=u8(ch.blockPtr); regs[0x0c]=u8(ch.blockPtr+0x01); ch.blockPtr+=0x02;
+				ch.vol=0x10;
+				ch.hasSoft=false;
+			} else {// software and hardware: eeee n r tt
+				cur13=(b>>0x04)&0x0f;
+				r13Retrig=((b>>0x02)&0x01)!=0x00?0x01:r13Retrig;
+				ch.noiseOn=((b>>0x03)&0x01)!=0x00;
+				if(ch.noiseOn) { regs[0x06]=u8(ch.blockPtr)&0x1f; ch.blockPtr++; }
+				ch.swP=u16(ch.blockPtr)&0xfff; ch.blockPtr+=0x02;
+				regs[0x0b]=u8(ch.blockPtr); regs[0x0c]=u8(ch.blockPtr+0x01); ch.blockPtr+=0x02;
+				ch.vol=0x10;
+				ch.hasSoft=true;
+			}
+		} else {
+			if(type==0x00) {// NSH difference: n(vvvvv)(l)00 — b2 = new volume, b3-6 = volume, b7 = noise
+				ch.hasSoft=false;
+				if(((b>>0x02)&0x01)!=0x00) { ch.vol=(b>>0x03)&0x0f; }
+				ch.noiseOn=((b>>0x07)&0x01)!=0x00;
+				if(ch.noiseOn) { regs[0x06]=u8(ch.blockPtr)&0x1f; ch.blockPtr++; }
+			} else if(type==0x01) {// SO difference: msp lsp vvvv 01
+				ch.vol=(b>>0x02)&0x0f;
+				ch.hasSoft=true;
+				if(((b>>0x06)&0x01)!=0x00) {// new LSB of the software period
+					ch.swP=(ch.swP&0x0f00)|u8(ch.blockPtr); ch.blockPtr++;
+				}
+				if(((b>>0x07)&0x01)!=0x00) {// new MSB (byte: bit7 isNoise, bit6 newNoise, bits 0-4 MSB)
+					var nb=u8(ch.blockPtr); ch.blockPtr++;
+					ch.swP=(ch.swP&0x00ff)|((nb&0x0f)<<8);
+					if(((nb>>0x07)&0x01)!=0x00) {
+						ch.noiseOn=true;
+						if(((nb>>0x06)&0x01)!=0x00) { regs[0x06]=u8(ch.blockPtr)&0x1f; ch.blockPtr++; }
+					} else { ch.noiseOn=false; }
+				}
+			} else if(type==0x02) {// HO difference: lsp msp nr eee 10
+				cur13=(((b>>0x02)&0x07)|0x08);// 3-bit envelope, bit 3 forced to 1 (values 8..15)
+				ch.vol=0x10;
+				ch.hasSoft=false;
+				if(((b>>0x07)&0x01)!=0x00) { regs[0x0b]=u8(ch.blockPtr); ch.blockPtr++; }
+				if(((b>>0x06)&0x01)!=0x00) { regs[0x0c]=u8(ch.blockPtr); ch.blockPtr++; }
+				if(((b>>0x05)&0x01)!=0x00) { readNoiseRetrig(ch); }
+			} else {// SAH difference: rn ne mssp lssp mshp lshp 11
+				ch.vol=0x10;
+				ch.hasSoft=true;
+				if(((b>>0x02)&0x01)!=0x00) { regs[0x0b]=u8(ch.blockPtr); ch.blockPtr++; }
+				if(((b>>0x03)&0x01)!=0x00) { regs[0x0c]=u8(ch.blockPtr); ch.blockPtr++; }
+				if(((b>>0x04)&0x01)!=0x00) { ch.swP=(ch.swP&0x0f00)|u8(ch.blockPtr); ch.blockPtr++; }
+				if(((b>>0x05)&0x01)!=0x00) { var sb=u8(ch.blockPtr); ch.blockPtr++; ch.swP=(ch.swP&0x00ff)|((sb&0x0f)<<8); }
+				if(((b>>0x06)&0x01)!=0x00) { cur13=u8(ch.blockPtr)&0x0f; ch.blockPtr++; }
+				if(((b>>0x07)&0x01)!=0x00) { readNoiseRetrig(ch); }
+			}
+		}
+	};
+	var readNoiseRetrig=function(ch) {// shared "noise or retrig" byte: bit0 retrig, bit1 isNoise, bit2 newNoise, bits 3-7 noise value
+		var nb=u8(ch.blockPtr); ch.blockPtr++;
+		if((nb&0x01)!=0x00) { r13Retrig=0x01; }
+		if(((nb>>0x01)&0x01)!=0x00) {
+			ch.noiseOn=true;
+			if(((nb>>0x02)&0x01)!=0x00) { regs[0x06]=(nb>>0x03)&0x1f; }
+		} else {
+			ch.noiseOn=false;
+		}
+	};
+
+	var frameCache=[];
+	var renderFrame=function() {
+		var c;
+		for(c=0x00;c<0x03;c++) {
+			var ch=chans[c];
+			if(ch.wait<=0x00) {// the RegisterBlock is finished: read the next Track entry
+				var dur=u8(ch.trackPtr);
+				ch.blockPtr=u16(ch.trackPtr+0x01);// track entry = db duration + dw block address (3 bytes)
+				if(ch.blockPtr<0x02||ch.blockPtr>=dlen) { throw "RegisterBlock address out of data"; }
+				ch.trackPtr+=0x03;
+				ch.wait=(dur==0x00)?0x100:dur;// duration byte 0 = 256 frames (8-bit counter wrap of the player)
+				ch.initial=true;
+			}
+			ch.wait--;
+			readState(ch);
+		}
+		var r7=0x00;// bits 6-7 (I/O ports) stay 0, the same convention as the other pre-rendered decoders
+		for(c=0x00;c<0x03;c++) {
+			if(!chans[c].hasSoft) { r7|=(0x01<<c); }// sound gate CLOSED (bit set, bits 0-2)
+			if(!chans[c].noiseOn) { r7|=(0x08<<c); }// noise gate CLOSED (bit set, bits 3-5)
+			regs[0x08+c]=chans[c].vol;
+			regs[0x00+2*c]=chans[c].swP&0xff;
+			regs[0x01+2*c]=(chans[c].swP>>8)&0xff;
+		}
+		if(r13Retrig!=0x00) { last13=(cur13|0x80)&0xff; r13Retrig=0x00; }
+		if(cur13!=last13) {
+			regs[0x0d]=cur13;
+			last13=cur13;
+		} else {
+			regs[0x0d]=0xff;
+		}
+		var i;
+		for(i=0x00;i<0x0e;i++) { frameCache.push(regs[i]); }
+	};
+
+	var frames=[];
+	var renderPass=function(fromPat, toPat) {
+		var i, f;
+		for(i=fromPat;i<toPat;i++) {
+			var pat=patterns[i];
+			var c;
+			for(c=0x00;c<0x03;c++) {
+				chans[c].trackPtr=pat.tracks[c];
+				chans[c].wait=0x00;
+				chans[c].initial=true;
+			}
+			for(f=0x00;f<pat.dur;f++) {
+				renderFrame();
+				if(frames.length+frameCache.length>MAX_FRAMES*14) { return false; }
+			}
+		}
+		return true;
+	};
+	var flushCache=function() {
+		for(var k=0x00;k<frameCache.length;k++) { frames.push(frameCache[k]); }
+		frameCache.length=0x00;
+	};
+	try {
+		if(!renderPass(0x00, loopPat)) { fail("song too long (over "+MAX_FRAMES+" frames) !"); return; }
+		flushCache();
+		var loopAt=frames.length;
+		if(!renderPass(loopPat, patterns.length)) { fail("song too long (over "+MAX_FRAMES+" frames) !"); return; }
+		if(!renderPass(loopPat, patterns.length)) { fail("song too long (over "+MAX_FRAMES+" frames) !"); return; }
+		flushCache();
+	} catch(e) {
+		fail(e+" !");
+		return;
+	}
+	if(frames.length==0x00) { fail("no frame rendered !"); return; }
+
+	var i;
+	this.data=new Uint8Array(frames.length);
+	for(i=0x00;i<frames.length;i++) { this.data[i]=frames[i]; }
+	this.frameSize=14;
+	this.nbFrames=Math.floor(frames.length/14);
+	this.loopFrame=Math.floor(loopAt/14);
+	this.dpos=0x00;
+	this.songAttributes=0x00;// sequential pre-rendered frames
+	this.masterClock=psgFreq;// the AKY header CARRIES the PSG frequency (dd, per PSG)
+	this.originalPlayerFrame=50;// one AKY frame = one interrupt (50 Hz CPC/ST)
+	this.digidrums=[];
+	this.songName="";// the AKY format carries no song metadata
+	this.authorName="";
+	this.songComment="Arkos Tracker "+(ver==0x00?"2 v1.0 / 3 v1.1":"v"+ver)+" AKY (pre-rendered at 50 Hz, "+psgFreq+" Hz PSG)";
+	this.supported=true;
+	console.log("AKY: "+patterns.length+" patterns, loop at pattern "+loopPat+", "+this.nbFrames+" frames @ 50 Hz, "+psgFreq+" Hz PSG, "+cc+" channel(s)");
+}
+
+YM_DECODERS.push({ name:"AKY",  is:function(d) { return this.isAky(d); }, init:function(d) { this.initAky(d); } });
+
+</script>
+<script type="text/javascript">
 "use strict"
 
 // AY-3-8910 emulation (c) 2015-2025 Megachur
@@ -11882,7 +12177,7 @@ var I18N={
 	"fmt.ymlzh":"YM (LZH packed)","fmt.ym4":"YM4! (obsolete, use YM5!)",
 	"fmt.ymst":"{id} (StSound)","fmt.pt3":"PT3 (Pro Tracker 3.x / Vortex Tracker II)",
 	"fmt.asc":"ASC Sound Master","fmt.stc":"STC (Sound Tracker compiled)","fmt.st1":"ST1 (Sound Tracker 1.x, uncompiled)","fmt.pt1":"PT1 (Pro Tracker 1.x compiled)","fmt.pt2":"PT2 (Pro Tracker 2.x compiled)",
-	"fmt.stp":"STP (Sound Tracker Pro compiled)","fmt.psm":"PSM (Pro Sound Maker compiled)","fmt.st3":"ST3 (Sound Tracker 3.x compiled)","fmt.ts":"TS (TurboSound container, 2 x AY)","fmt.psc":"PSC (Pro Sound Creator compiled)","fmt.sqt":"SQT (SQ-Tracker compiled)",
+	"fmt.stp":"STP (Sound Tracker Pro compiled)","fmt.psm":"PSM (Pro Sound Maker compiled)","fmt.st3":"ST3 (Sound Tracker 3.x compiled)","fmt.ts":"TS (TurboSound container, 2 x AY)","fmt.psc":"PSC (Pro Sound Creator compiled)","fmt.sqt":"SQT (SQ-Tracker compiled)","fmt.aky":"AKY (Arkos Tracker 2/3 streamed export)",
 	"fmt.akg":"AKG (Arkos Tracker 3)","fmt.aks":"AKS (Arkos Tracker 2/3 song — source)","fmt.sks":"SKS (STarKos song — source)","fmt.unknown":"Unknown / not supported",
 	"fmt.vgm":"VGM (Video Game Music register log)","fmt.vgz":"VGZ (gzip-compressed VGM)",
 	"cart.warning":"Warning","cart.vgzNote":"Note","cart.howTo":"To play it","src.aksHow":"Open the .aks in Arkos Tracker 3 and export it as AKG (AT30), then load the .akg here.","src.sksHow":"Import the .sks song into Arkos Tracker first, then export it as AKG (AT30) and load the .akg here.",
@@ -11937,7 +12232,7 @@ var I18N={
 	"help.featuresTitle":"Features",
 	"help.fLocal":"100% local player: no server, no network — works from a plain HTML file (ScriptProcessor fallback on file:// pages).",
 	"help.fPwa":"installable PWA: once loaded, the application works offline (service worker cache) and remembers the language, skin, scheme, chip and clock.",
-	"help.fFormats":"formats: YM2!/YM3!/YM3b/YM5!/YM6! (+ digidrums, LZH-packed), PSG/EPSG, AYC, VTX, VGM/VGZ (AY8910/YM2149), ASC, STC/ST1/ST3, STP, PSM, PSC, SQT, PT3/PT2/PT1, AKG (Arkos Tracker 3), TS (TurboSound 2 x AY), WAV/MP3/OGG/FLAC.",
+	"help.fFormats":"formats: YM2!/YM3!/YM3b/YM5!/YM6! (+ digidrums, LZH-packed), PSG/EPSG, AYC, VTX, VGM/VGZ (AY8910/YM2149), ASC, STC/ST1/ST3, STP, PSM, PSC, SQT, PT3/PT2/PT1, AKG (Arkos Tracker 3), AKY (Arkos Tracker 2/3 streamed), TS (TurboSound 2 x AY), WAV/MP3/OGG/FLAC.",
 	"help.fPanels":"the panels follow the playback: format cartouche (details of the loaded file), AY registers view, A/B/C square wave viewer, playlist.",
 	"help.fSeek":"click the progress bar to seek inside the track; the LCD shows the elapsed and total time.",
 	"help.close":"Close"
@@ -11998,7 +12293,7 @@ var I18N={
 	"fmt.ymlzh":"YM (compressé LZH)","fmt.ym4":"YM4! (obsolète, utilisez YM5!)",
 	"fmt.ymst":"{id} (StSound)","fmt.pt3":"PT3 (Pro Tracker 3.x / Vortex Tracker II)",
 	"fmt.asc":"ASC Sound Master","fmt.stc":"STC (Sound Tracker compilé)","fmt.st1":"ST1 (Sound Tracker 1.x, non compilé)","fmt.pt1":"PT1 (Pro Tracker 1.x compilé)","fmt.pt2":"PT2 (Pro Tracker 2.x compilé)",
-	"fmt.stp":"STP (Sound Tracker Pro compilé)","fmt.psm":"PSM (Pro Sound Maker compilé)","fmt.st3":"ST3 (Sound Tracker 3.x compilé)","fmt.ts":"TS (conteneur TurboSound, 2 x AY)","fmt.psc":"PSC (Pro Sound Creator compilé)","fmt.sqt":"SQT (SQ-Tracker compilé)",
+	"fmt.stp":"STP (Sound Tracker Pro compilé)","fmt.psm":"PSM (Pro Sound Maker compilé)","fmt.st3":"ST3 (Sound Tracker 3.x compilé)","fmt.ts":"TS (conteneur TurboSound, 2 x AY)","fmt.psc":"PSC (Pro Sound Creator compilé)","fmt.sqt":"SQT (SQ-Tracker compilé)","fmt.aky":"AKY (Arkos Tracker 2/3 export streamé)",
 	"fmt.akg":"AKG (Arkos Tracker 3)","fmt.aks":"AKS (chanson Arkos Tracker 2/3 — source)","fmt.sks":"SKS (chanson STarKos — source)","fmt.unknown":"Inconnu / non supporté",
 	"fmt.vgm":"VGM (journal de registres Video Game Music)","fmt.vgz":"VGZ (VGM compressé gzip)",
 	"cart.warning":"Avertissement","cart.vgzNote":"Note","cart.howTo":"Pour l'écouter","src.aksHow":"Ouvrir le .aks dans Arkos Tracker 3 et l'exporter en AKG (AT30), puis charger le .akg ici.","src.sksHow":"Importer la chanson .sks dans Arkos Tracker, puis l'exporter en AKG (AT30) et charger le .akg ici.",
@@ -12053,7 +12348,7 @@ var I18N={
 	"help.featuresTitle":"Fonctionnalités",
 	"help.fLocal":"player 100 % local : aucun serveur, aucun réseau — fonctionne depuis un simple fichier HTML (repli ScriptProcessor en page file://).",
 	"help.fPwa":"PWA installable : une fois chargée, l'application fonctionne hors ligne (cache du service worker) et mémorise la langue, le skin, le jeu de couleurs, la puce et l'horloge.",
-	"help.fFormats":"formats : YM2!/YM3!/YM3b/YM5!/YM6! (+ digidrums, archives LZH), PSG/EPSG, AYC, VTX, VGM/VGZ (AY8910/YM2149), ASC, STC/ST1/ST3, STP, PSM, PSC, SQT, PT3/PT2/PT1, AKG (Arkos Tracker 3), TS (TurboSound 2 x AY), WAV/MP3/OGG/FLAC.",
+	"help.fFormats":"formats : YM2!/YM3!/YM3b/YM5!/YM6! (+ digidrums, archives LZH), PSG/EPSG, AYC, VTX, VGM/VGZ (AY8910/YM2149), ASC, STC/ST1/ST3, STP, PSM, PSC, SQT, PT3/PT2/PT1, AKG (Arkos Tracker 3), AKY (Arkos Tracker 2/3 export streamé), TS (TurboSound 2 x AY), WAV/MP3/OGG/FLAC.",
 	"help.fPanels":"les panneaux suivent la lecture : cartouche de format (détails du fichier chargé), vue des registres AY, visualiseur d'ondes carrées A/B/C, liste de lecture.",
 	"help.fSeek":"cliquer sur la barre de progression déplace la lecture dans le morceau ; le LCD affiche le temps écoulé et le temps total.",
 	"help.close":"Fermer"
@@ -12114,7 +12409,7 @@ var I18N={
 	"fmt.ymlzh":"YM (comprimido LZH)","fmt.ym4":"YM4! (obsoleto, use YM5!)",
 	"fmt.ymst":"{id} (StSound)","fmt.pt3":"PT3 (Pro Tracker 3.x / Vortex Tracker II)",
 	"fmt.asc":"ASC Sound Master","fmt.stc":"STC (Sound Tracker compilado)","fmt.st1":"ST1 (Sound Tracker 1.x, no compilado)","fmt.pt1":"PT1 (Pro Tracker 1.x compilado)","fmt.pt2":"PT2 (Pro Tracker 2.x compilado)",
-	"fmt.stp":"STP (Sound Tracker Pro compilado)","fmt.psm":"PSM (Pro Sound Maker compilado)","fmt.st3":"ST3 (Sound Tracker 3.x compilado)","fmt.ts":"TS (contenedor TurboSound, 2 x AY)","fmt.psc":"PSC (Pro Sound Creator compilado)","fmt.sqt":"SQT (SQ-Tracker compilado)",
+	"fmt.stp":"STP (Sound Tracker Pro compilado)","fmt.psm":"PSM (Pro Sound Maker compilado)","fmt.st3":"ST3 (Sound Tracker 3.x compilado)","fmt.ts":"TS (contenedor TurboSound, 2 x AY)","fmt.psc":"PSC (Pro Sound Creator compilado)","fmt.sqt":"SQT (SQ-Tracker compilado)","fmt.aky":"AKY (Arkos Tracker 2/3 export transmitido)",
 	"fmt.akg":"AKG (Arkos Tracker 3)","fmt.aks":"AKS (canción de Arkos Tracker 2/3 — fuente)","fmt.sks":"SKS (canción de STarKos — fuente)","fmt.unknown":"Desconocido / no soportado",
 	"fmt.vgm":"VGM (registro Video Game Music)","fmt.vgz":"VGZ (VGM comprimido gzip)",
 	"cart.warning":"Aviso","cart.vgzNote":"Nota","cart.howTo":"Para oírlo","src.aksHow":"Abrir el .aks en Arkos Tracker 3 y exportarlo como AKG (AT30), luego cargar el .akg aquí.","src.sksHow":"Importar la canción .sks en Arkos Tracker, luego exportarla como AKG (AT30) y cargar el .akg aquí.",
@@ -12169,7 +12464,7 @@ var I18N={
 	"help.featuresTitle":"Funcionalidades",
 	"help.fLocal":"reproductor 100 % local: sin servidor, sin red — funciona desde un simple archivo HTML (respaldo ScriptProcessor en páginas file://).",
 	"help.fPwa":"PWA instalable: una vez cargada, la aplicación funciona sin conexión (caché del service worker) y recuerda el idioma, el tema, la paleta, el chip y el reloj.",
-	"help.fFormats":"formatos: YM2!/YM3!/YM3b/YM5!/YM6! (+ digidrums, archivos LZH), PSG/EPSG, AYC, VTX, VGM/VGZ (AY8910/YM2149), ASC, STC/ST1/ST3, STP, PSM, PSC, SQT, PT3/PT2/PT1, AKG (Arkos Tracker 3), TS (TurboSound 2 x AY), WAV/MP3/OGG/FLAC.",
+	"help.fFormats":"formatos: YM2!/YM3!/YM3b/YM5!/YM6! (+ digidrums, archivos LZH), PSG/EPSG, AYC, VTX, VGM/VGZ (AY8910/YM2149), ASC, STC/ST1/ST3, STP, PSM, PSC, SQT, PT3/PT2/PT1, AKG (Arkos Tracker 3), AKY (Arkos Tracker 2/3 export transmitido), TS (TurboSound 2 x AY), WAV/MP3/OGG/FLAC.",
 	"help.fPanels":"los paneles siguen la reproducción: cartucho de formato (detalles del archivo cargado), vista de los registros AY, visor de ondas cuadradas A/B/C, lista de reproducción.",
 	"help.fSeek":"hacer clic en la barra de progreso desplaza dentro de la pieza; el LCD muestra el tiempo transcurrido y el total.",
 	"help.close":"Cerrar"
@@ -13337,6 +13632,14 @@ function detectFormat(d) {
 			return "fmt.sqt";
 		}
 	} catch(e) {}
+	// 202610.64.0: AKY — the LAST structural test, exactly like the engine registry order
+	// (aky.js loads after sqt.js): only unclaimed bytes reach the probe, and the isAky gate
+	// (version 0..7, full linker walk, in-data targets, entry-aligned loop) is strict.
+	try {
+		if(typeof YMPlayer!="undefined"&&YMPlayer.prototype.isAky!=null&&YMPlayer.prototype.isAky(d)) {
+			return "fmt.aky";
+		}
+	} catch(e) {}
 	return "fmt.unknown";
 }
 function chipCartLabel(YM) {
@@ -14121,7 +14424,7 @@ function selectDropFiles(fileList) {
 		<span id="labelSelectFile">Select Music :</span>
 		<button id="btnSelectFile" class="key key-transport" type="button" onclick="ymMusicName.click();">Choose file(s)</button>
 		<span id="fileCount" class="file-count" aria-live="polite"></span>
-		<input type="file" id="ymMusicName" name="file" accept=".mp3,.wav,.flac,.ogg,.oga,.ym,.ym2,.ym3,.ym5,.ym6,.lzh,.psg,.ayc,.vtx,.vgm,.vgz,.pt3,.pt1,.pt2,.akg,.aks,.sks,.asc,.as0,.stc,.st1,.st,.st3,.stp,.stp2,.psm,.psc,.ts,.sqt" onchange="file_currentidx=0;playlistEpoch++;loadlocalym();updateFileCount();" multiple>
+		<input type="file" id="ymMusicName" name="file" accept=".mp3,.wav,.flac,.ogg,.oga,.ym,.ym2,.ym3,.ym5,.ym6,.lzh,.psg,.ayc,.vtx,.vgm,.vgz,.pt3,.pt1,.pt2,.akg,.aks,.sks,.asc,.as0,.stc,.st1,.st,.st3,.stp,.stp2,.psm,.psc,.ts,.sqt,.aky" onchange="file_currentidx=0;playlistEpoch++;loadlocalym();updateFileCount();" multiple>
 		<span class="dropzone" id="dropZone" role="button" title="or drop your music files here">or drop your music files here</span>
 	</div>
 	<div class="row row-progress"><span class="bar-wrap"><progress id="progression" value="00" max="100">0%</progress><span id="progressionHandle" class="bar-handle" aria-hidden="true"></span></span><span id="progressionPercent" class="bar-percent">0%</span></div>
@@ -14225,7 +14528,7 @@ https://oku.edu.mie-u.ac.jp/~okumura/compression/ar002/<br>
 Adapted to javascript for YM emulation &copy; 2016-2026 Megachur
 		</p>
 	<p>AY Player — <a href="https://www.cpc-power.com/" target="_blank" rel="noopener">www.cpc-power.com</a> — Langages : HTML5 / JavaScript — Conforme W3C</p>
-	<span id="appVersion" class="foot-version">202610.63.1</span>
+	<span id="appVersion" class="foot-version">202610.64.0</span>
 	<button id="schemeToggle" class="power" type="button" onclick="toggleScheme();" aria-pressed="false" aria-label="Toggle light/dark color scheme" title="Toggle light/dark color scheme"><i class="power-led" aria-hidden="true"></i>ON</button>
 </footer>
 </main>

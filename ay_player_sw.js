@@ -1,4 +1,4 @@
-// AY Player service worker — release 202610.63.1 (public end-user build, single-file page).
+// AY Player service worker — release 202610.64.0 (public end-user build, single-file page).
 // Precaches the single-file index.html + the manifest (the icons are embedded in the
 // manifest as data: URIs, the whole player is inlined in index.html), then serves
 // cache-first with a network fallback; old caches are deleted on activate. The cache
@@ -6,7 +6,7 @@
 //
 // YM Music emulation (c) 2016 Megachur — see the notice in index.html.
 
-var CACHE = 'ay-player-202610.63.1';
+var CACHE = 'ay-player-202610.64.0';
 var ASSETS = [
   './',
   './index.html',
