@@ -20,4 +20,4 @@ Hébergeur du player original et source des dumps YM ; voir www.cpc-power.com.
 
 ## PolyForm Noncommercial 1.0.0
 La présente diffusion est sous licence PolyForm Noncommercial 1.0.0 (voir LICENSE) :
-https://polyformproject.org/licenses/noncommercial/1.0.0/
+https://polyformproject.org/licenses/noncommercial/1.0.0
