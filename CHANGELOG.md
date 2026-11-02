@@ -1,3 +1,22 @@
+lot 202610.93.100 — release publique : piste du pattern pour TOUS les formats AY
+
+- **Piste du pattern partout** : le panneau « Piste du pattern » (section Ondes) affiche
+  la piste synthétisée pour les dumps YM (YM2!/YM3!/YM3b/YM5!/YM6!), PSG, VTX, AYC, VGM,
+  MYM et MIDI, en plus de tous les trackers (93.99) ; la piste suit la lecture à l'oreille.
+  Corrections : le kernel YM n'exposait jamais la piste (panneau masqué), et charger un
+  PT3 puis un YM laissait la piste PT3 affichée (reset trackView dans load()).
+- **Suivi à l'oreille** : vue des registres/notes, ondes, barre et LCD alignés sur l'audio
+  (fix de la désynchronisation de ~5 frames, la tête de rendu AudioWorklet devançait l'oreille).
+- **Chips nettoyées par l'auteur** : ay8910.js + ym2149.js (enveloppes, fall-through R15
+  conservés) — rendu IDENTIQUE, prouvé par oracle sur 6667 états complets.
+- **Aide intégrée complète (FR/EN/ES/DE/IT)** : tous les formats supportés documentés
+  (ajout IT, DW, CHP, banques SF2), piste du pattern documentée trackers + dumps AY/YM.
+- **Build public tout-en-un** : 39 scripts + CSS inlinés, avis de licence conservés,
+  moteurs du bundle validés 40/40 par les oracles (dumps byte-identiques, pistes exactes).
+- Service worker : cache ay-player-202610.93.100. Version affichée 202610.93.100.
+
+---
+
 lot 202610.64.0 — decodeur AKY (Arkos Tracker 2/3 streamed export)
 
 - NOUVEAU format : AKY, l'export "streamed" d'Arkos Tracker 2 v1.0 / 3 v1.1 — header
@@ -42,6 +61,30 @@ lot 202610.63.0 — volume sur l audio simple + volume persiste
 
 Historique complet, unifié et simplifié du player. Les versions techniques intermédiaires
 (202610.x) sont regroupées par thème ; l'historique détaillé lot par lot reste archivé.
+
+## 202610.64.1 – 202610.93.100 — Lecteurs Amiga/PC, MIDI/SF2, piste du pattern (condensé)
+
+- **Modules Amiga / PC** : MOD (Amiga ProTracker), FC (Future Composer 1.0–1.4), S3M (Scream
+  Tracker 3, mixage Gravis Ultrasound + AdLib OPL2/OPL3), XM (FastTracker II), IT (Impulse
+  Tracker), DW (David Whittaker) — rendus WAV offline par tranches avec pourcentage de
+  décodage ; portages st3play/ft2play/it2play (BSD-3, Olav Sørensen / 8bitbubsy), OPL3 Nuked
+  (LGPL-2.1), transcription du replayer C# NostalgicPlayer pour DW.
+- **MIDI / SF2** : le Standard MIDI File (.mid) se rend au choix sur puce AY, OPL2/OPL3 ou
+  banque SF2 locale (sampler SoundFont 2 maison 100 % JS, pas de FluidSynth/WASM) ; rendu
+  progressif type VLC : 10 s rendues à l'ouverture, complétion en tâche de fond.
+- **Nouveaux formats** : AKS (chanson source Arkos Tracker : ZIP + XML + DEFLATE maison),
+  SKS (STarKos), ST128/ST1X/ST2 (Soundtrakker 128 et 1.x), GTR (Global Tracker), FTC (Fast
+  Tracker ZX), CHP (ChipNSFX, format texte de CNGSoft), MYM (Oric Atmos), FUR (Furnace
+  Tracker), VGM/VGZ AY, TS TurboSound 2 puces.
+- **Piste du pattern (93.99)** : le visualiseur d'ondes A/B/C affiche la piste du pattern
+  (notes, instruments, volumes) qui suit la lecture à la ligne près — pour tous les moteurs
+  trackers (PT3, ASC, STC/ST1/ST3, ST128/ST2, STP, PSM, PSC, SQT, GTR, FTC, AKG, AKY, AKS,
+  SKS, FUR, TS...).
+- **Piste des dumps + suivi à l'oreille (93.100)** : piste aussi synthétisée pour tous les
+  dumps AY/YM et le MIDI ; registres, ondes, barre et LCD suivent l'oreille.
+- **Qualité** : changelog globalisé hors sources, oracles systématiques (md5 byte-exact,
+  invariants registres), service worker et version affichée synchronisés à chaque lot.
+
 
 ## 202610.62.1 — Allègement du build public
 

@@ -22,14 +22,17 @@ et fonctionne ensuite intégralement hors ligne (service worker).
 | Famille | Formats |
 |---|---|
 | Dumps YM (StSound, format d'Arnaud Carré) | YM2!, YM3!, YM3b, YM5!, YM6! (+ digidrums, intercalés ou non, compressés LZH ou non) |
-| Dumps de registres | PSG / EPSG (Atari ST / ZX), AYC (Amstrad CPC), VTX `ym` et `ay` |
+| Dumps de registres | PSG / EPSG (Atari ST / ZX), AYC (Amstrad CPC), VTX `ym` et `ay`, MYM (Oric Atmos) |
 | VGM | VGM / VGZ avec puce YM2149 / AY-3-8910 |
-| Trackers ZX / CPC | AKG (Arkos Tracker 3), PT3/PT2/PT1 (Pro Tracker), ASC Sound Master, STC/ST1/ST3 (Sound Tracker), STP (Sound Tracker Pro), PSM (Pro Sound Maker), PSC (Pro Sound Creator), SQT (SQ-Tracker), TurboSound (2 puces) |
+| Trackers ZX / CPC | AKG (Arkos Tracker 3), AKY (Arkos Tracker 2/3 export streamé), AKS (chanson source Arkos Tracker), PT3/PT2/PT1 (Pro Tracker / Vortex Tracker), ASC Sound Master, STC/ST1/ST3 (Sound Tracker), ST128/ST1X/ST2 (Soundtrakker), STP (Sound Tracker Pro), PSM (Pro Sound Maker), PSC (Pro Sound Creator), SQT (SQ-Tracker), SKS (STarKos), GTR (Global Tracker), FTC (Fast Tracker ZX), CHP (ChipNSFX), FUR (Furnace Tracker), TS (TurboSound, 2 puces) |
+| Trackers Amiga / PC | MOD (Amiga ProTracker), FC (Future Composer 1.0-1.4), S3M (Scream Tracker 3, GUS + OPL2/OPL3), XM (FastTracker II), IT (Impulse Tracker), DW (David Whittaker .dw/.dwold) |
+| MIDI | SMF (.mid) avec rendu au choix : puce AY, OPL2/OPL3 (AdLib) ou banque SF2 (SoundFont 2 locale) |
 | Audio simple | MP3, WAV, OGG/OGA, FLAC (décodés par le navigateur) |
 
-Fonctions : playlist, visualiseur d'ondes par canal, vue des registres AY, choix de la puce
-(AY-3-8910 / YM2149) et de l'horloge, coupure A/B/C, disposition stéréo ABC/ACB, mode compact,
-thèmes, zoom, interface FR/EN/ES.
+Fonctions : playlist, visualiseur d'ondes par canal A/B/C avec **piste du pattern** (pour les
+trackers ET pour tous les dumps AY/YM — YM, PSG, VTX, AYC, VGM, MYM, MIDI), vue des registres
+AY, choix de la puce (AY-3-8910 / YM2149) et de l'horloge, coupure A/B/C, disposition stéréo
+ABC/ACB, mode compact, thèmes, zoom, interface FR/EN/ES/DE/IT.
 
 ## Crédits et licence
 
