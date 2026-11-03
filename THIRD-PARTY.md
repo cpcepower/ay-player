@@ -47,7 +47,9 @@ vendé par yoyofr/modizer.
 ## Furnace Tracker — référence d'émulation
 Le lecteur .fur (fur.js) est une implémentation maison validée octet pour octet contre le
 rendu de **Furnace** (tildearrow, GPLv2+) limité aux puces AY-3-8910/YM2149 — aucun code
-Furnace intégré.
+Furnace intégré. Le support de l'ancien format (v33..156) transpose les structures de
+chargement des mêmes sources Furnace, validées par relecture structurelle de modules réels
+de la tranche — aucun code intégré.
 
 ## ZXTune — référence de transcription
 Les sémantiques des formats trackers (STP, PSM, ST3, ST1, PSC, SQT, PT, TS, GTR, FTC, ST128,

@@ -1,3 +1,31 @@
+lot 202611.93 — release publique : Furnace ancien format, cycle compact 3 vues, écrans petits
+
+- **Furnace Tracker ancien format** : les modules .fur des vieilles versions se jouent
+  désormais — v33..118 (furParseOld : instruments par famille avec seuils par version,
+  patterns PATR s16) et v119..156 (ère 2023 : instruments INST et patterns PATR via des
+  marches partagées, seuils INFO de la tranche) ; v48/v99 (2021-2022) avec instruments
+  vivants à l'écoute (enveloppes déclenchées, percussions avec attaque) et percussions
+  nettes (TheDuccinator v48 : kick arp descendante et volume décroissant).
+- **Correctifs d'écoute** : les notes des .fur v48/v99 jouaient 5 octaves trop bas (espace
+  de notes converti vers l'espace octet du format moderne) ; leurs instruments restaient
+  figés (champs loop/release lus en i32 au lieu d'octets non signés) ; crash ReferenceError
+  au chargement de tout module ASC (colonne Effets) ; l'arpège fixe v<112 est décodé via
+  calcArp comme la référence.
+- **Cartouche** : la fenêtre d'info du format passe à 800px en vue normale et affiche
+  « Version Furnace vNNN » pour tous les .fur, compressés inclus (Furnace sauvegarde deflate
+  par défaut : la sonde de format voit désormais le module joué par le moteur FUR).
+- **Cycle compact 3 vues (202611.93.101)** : le bouton Compact enchaîne normale → pleine
+  largeur → compacte (icônes et libellés de l'action suivante traduits FR/EN/ES/DE/IT,
+  vue mémorisée dans localStorage, raccourci C inchangé).
+- **Responsive petits écrans** : registres, playlist et cartouche défilent DANS leurs
+  panneaux (width 100% + plafonds, overflow-x), plus jamais la page — coque et contrôles
+  resserrés sous 480px.
+- **Piste du pattern ASC** : colonne Effets à codes fixes de 3 caractères (E/G/S/V/N + 2
+  hexa, E-- quand inactif), cellules alignées sur les 13 caractères des autres formats.
+- Service worker : cache ay-player-202611.93. Version affichée 202611.93.103.
+
+---
+
 lot 202610.93.100 — release publique : piste du pattern pour TOUS les formats AY
 
 - **Piste du pattern partout** : le panneau « Piste du pattern » (section Ondes) affiche
@@ -61,6 +89,17 @@ lot 202610.63.0 — volume sur l audio simple + volume persiste
 
 Historique complet, unifié et simplifié du player. Les versions techniques intermédiaires
 (202610.x) sont regroupées par thème ; l'historique détaillé lot par lot reste archivé.
+
+## 202610.93.101 – 202611.93 — Furnace ancien format, compact 3 vues, responsive (condensé)
+
+- **Furnace ancien (93.102 – 103)** : les .fur v33..118 (format plat de l'ère 2021-2022)
+  et v119..156 (ère 2023, blocs INST/PATR) sont acceptés et prouvés par walks byte-exact
+  sur corpus ; correctifs de hauteur (5 octaves), d'instruments figés (loop/release u8) et
+  du crash ASC ; le cartouche affiche la version Furnace pour tous les .fur.
+- **Interface (93.101)** : bouton Compact à cycle 3 vues (normale / pleine largeur /
+  compacte), panneaux responsive qui défilent dans leurs cadres sur petits écrans,
+  cartouche 800px, effets ASC alignés en colonnes.
+
 
 ## 202610.64.1 – 202610.93.100 — Lecteurs Amiga/PC, MIDI/SF2, piste du pattern (condensé)
 

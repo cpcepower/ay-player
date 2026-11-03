@@ -1,4 +1,4 @@
-<!DOCTYPE html><!-- SINGLE-FILE RELEASE BUILD 202610.93.100 — all-in-one public build: the 39 scripts and the stylesheet are inlined; non-license comments stripped (license notices preserved). -->
+<!DOCTYPE html><!-- SINGLE-FILE RELEASE BUILD 202611.93 — all-in-one public build: the 39 scripts and the stylesheet are inlined; non-license comments stripped (license notices preserved). -->
 <HTML lang="fr">
 <HEAD>
 <meta charset="UTF-8"/>
@@ -6,10 +6,10 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='2' fill='%23101214'/%3E%3Cpath d='M1 8h2l2-5 2 10 2-8 2 3h4' fill='none' stroke='%234fd18b' stroke-width='1.5' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E"/>
 <meta name="theme-color" content="#101214"/>
 <!-------------------------------------------------------------------------------
-  AY Player — release 202610.93.100 (public end-user build, single-file).
+  AY Player — release 202611.93 (public end-user build, single-file).
 
   Copyright (c) 2016-2026 Yoann Courtois aka Megachur — original YM/AY player,
-  freeware for non-commercial purposes. Modified October 2026 by cpcepower:
+  freeware for non-commercial purposes. Modified October-November 2026 by cpcepower:
   every "MODIFIED October 2026" notice is preserved in each source file below.
 
   Full change history: CHANGELOG.md. Third-party notices: THIRD-PARTY.md.
@@ -23,7 +23,7 @@
 <!-- The complete modification history is globalized in CHANGELOG.md at the root of the -->
 <!-- ay-player-archive repository. -->
 <!-- -------------------------------------------------------------------------- -->
-<TITLE>AY Player (YM, dumps, trackers...) - 202610.93.100</TITLE>
+<TITLE>AY Player (YM, dumps, trackers...) - 202611.93.103</TITLE>
 
 <script>
 (function(){try{var __o=null;try{__o=localStorage.getItem("ayplayer.scheme");}catch(e){}
@@ -792,13 +792,17 @@ section.folded > div > .cartouche-title {/* no dangling bottom border when the p
 	overflow:hidden;
 	text-overflow:ellipsis;
 }
-.cartouche {
+.cartouche {/* lot 202611.93.101: was min-width:640px — fluid now, same pattern as .regview; lot 202611.93.102: cap 800px like .regview/.bar-wrap so the format info window matches the other panels */
 	display:inline-block;
 	text-align:left;
 	border:2px solid var(--border);
 	background:var(--panel);
 	padding:6px 12px;
-	min-width:640px;
+	min-width:0;
+	width:100%;
+	max-width:800px;
+	box-sizing:border-box;
+	overflow-x:auto;/* long file names scroll inside, the nowrap labels never widen the page */
 }
 .cartouche-title {
 	font-weight:bold;
@@ -814,16 +818,17 @@ section.folded > div > .cartouche-title {/* no dangling bottom border when the p
 	a MOVED Format panel stuck to its neighbour); uniform in ANY order */
 	margin-top:10px;
 }
-.regview {
+.regview {/* lot 202611.93.101: was inline-block min-width:760px + width:800px — fluid now (adapt DOWN, cap up), the fixed monospace columns scroll INSIDE */
 	display:inline-block;
 	text-align:left;
 	border:2px solid var(--border);
 	background:var(--panel);
 	padding:6px 12px;
-	min-width:760px;
-	width:800px;/* explicit width on the page axis — the inner width:100% tables can no longer resolve against the available cell width and stretch edge to edge */
-	max-width:100%;
+	min-width:0;
+	width:100%;
+	max-width:800px;
 	box-sizing:border-box;
+	overflow-x:auto;/* the colgroup (190+180+120px fixed layout) forces the true table width on narrow screens: the panel scrolls, never the page */
 	margin-top:0px;/* the gap moved to the SECTION (uniform panel spacing in any order) */
 }
 .regview-table {/* fixed layout — column widths come from the colgroup, the panel never shifts */
@@ -1098,8 +1103,9 @@ section.drag-source {/* the panel being dragged fades in place */
 /* — TOS ICON KEYCAP + WHOLE-TITLE DRAG HANDLE ==================== */
 .compact-icon .ci { display:none; }
 .compact-icon .ci svg { display:block; width:14px; height:14px; }
-.compact-icon[data-compact="0"] .ci-off,/* outline box: the Compact ACTION from expand mode */
-.compact-icon[data-compact="1"] .ci-on {/* filled box: the Expand ACTION from compact mode */
+.compact-icon[data-view="normal"] .ci-full,/* wide arrows: the Full width ACTION from the normal page */
+.compact-icon[data-view="full"] .ci-off,/* outline box: the Compact ACTION from full browser width */
+.compact-icon[data-view="compact"] .ci-on {/* filled box: the Expand ACTION from the compact bar */
 	display:inline-block;
 }
 .panel-drag {/* the WHOLE panel title is the drag handle of the reorder */
@@ -1437,6 +1443,26 @@ section.folded > .render-menu {
 .st2-omx-cell { text-align:center; min-height:22px; line-height:22px; }
 .st2-omx-pos.hdr, .st2-omx-cell.hdr { opacity:.55; }
 .st2-omx-pos.cur, .st2-omx-cell.cur { background:var(--accent); color:#ffffff; border-radius:3px; font-weight:bold; }
+
+/* — LOT 202611.93.101 : CYCLE 3 VUES + RESPONSIVE ==================== */
+body.fullwidth .page {/* the 2nd state of the view cycle (compactToggle): the shell takes the whole browser width */
+	max-width:none;
+	border-left:none;
+	border-right:none;
+	border-radius:0px;
+	box-shadow:none;
+}
+body.fullwidth .bar-wrap,
+body.fullwidth .regview,
+body.fullwidth .cartouche {/* the content follows the shell edge to edge (the caps lift ONLY in this state) */
+	max-width:none;
+}
+@media (max-width:480px) {/* small screens: tighter shell and controls — no horizontal page scroll, panels scroll INSIDE */
+	.page { padding:6px 6px; border-radius:10px 10px 14px 14px; }
+	.app-head { flex-wrap:wrap; }/* the tools cluster can fall under the title */
+	#sectControls { padding:8px 6px; }
+	.row { gap:4px; }
+}
 
 </style>
 
@@ -2871,12 +2897,14 @@ YMPlayer.prototype.initAsc = function(d, ver) {// Parse the module and pre-rende
 			var note=(cc.rest!==true&&cc.note!=null&&cc.note>=0x00)?cc.note:0xffff;
 			var ins=(cc.sample!=null&&cc.sample>=0x00&&cc.sample<0x20)?cc.sample+0x01:0xffff;
 			var vol=(cc.volume!=null&&cc.volume>=0x00)?cc.volume:0xffff;
-			var ef="";
-			if((cc.envType!=null&&cc.envType>=0x00)||cc.envOn===0x01) { ef="E"; }
-			else if(cc.gliss!=null&&cc.gliss!==LIMITER) { ef="G"; }
-			else if(cc.slideSteps!=null&&cc.slideSteps!==LIMITER) { ef="S"; }
-			else if(cc.volSlidePeriod!=null&&cc.volSlidePeriod>=0x00) { ef="V"; }
-			else if(cc.noise!=null&&cc.noise>=0x00) { ef="N"; }
+			var h2=function(n) { return ("0"+(n&0xff).toString(16)).slice(-2); };// colonne EFFET : 3 chars fixes (13 par cellule), lot 202611.93.102
+			var ef="";// declaree : les cellules sans effet la lisent (fix ReferenceError, lot 202611.93.102.1)
+			if(cc.envType!=null&&cc.envType>=0x00) { ef="E"+h2(cc.envType); }
+			else if(cc.envOn===0x01) { ef="E--"; }
+			else if(cc.gliss!=null&&cc.gliss!==LIMITER) { ef="G"+h2(Math.abs(cc.gliss)/0x10); }
+			else if(cc.slideSteps!=null&&cc.slideSteps!==LIMITER) { ef="S"+h2(cc.slideSteps); }
+			else if(cc.volSlidePeriod!=null&&cc.volSlidePeriod>=0x00) { ef="V"+h2(((cc.volSlideDelta<0x00)?0x20:0x00)|(cc.volSlidePeriod&0x1f)); }
+			else if(cc.noise!=null&&cc.noise>=0x00) { ef="N"+h2(cc.noise); }
 			cells.push({n:note, i:ins, v:vol, ef:ef});
 		}
 		return cells;
@@ -33840,9 +33868,10 @@ YM_DECODERS.push({ name:"MYM", is:function(d) { return this.isMym(d); }, init:fu
 </script>
 <script>
 // FUR: Furnace Tracker module (.fur) decoder - AY-3-8910/YM2149 chip, block-based module
+// v156 - the shared walks furWalkINST/furWalkPATR carry the law; v157..239: PATN). This
 // A .fur starts with the 16-byte magic "-Furnace module-", then u16 version @16, u16
 // reserved @18 and u32 songInfoSeek @20. A module saved compressed (Furnace's default) is
-// the gate tries a zlib stream first. Version gates: v<157 carries the old PATR pattern
+// the gate tries a zlib stream first. Version gates: v33..118 carry the old flat layout
 // land exactly on the end of file - a structural gate on the whole module. INFO carries
 // release, 183 = raw + 4-byte period); SONG blocks carry subsongs 1+ (not rendered here).
 // On load Furnace adds 1 to every AY wave macro value of a module older than v193 - the
@@ -34078,6 +34107,199 @@ YMPlayer.prototype.furLoad = function(d) {// raw or zlib-compressed module -> th
 	return null;
 };
 
+YMPlayer.prototype.furWalkINST = function(R, io, ver) {// -> {type, name, macros, hasSM}, throws on corruption
+	var ir=new R(io+0x04);
+	ir.i32();// block size, ignored
+	ir.u16();// instrument format version, ignored
+	var itype=ir.u8();
+	ir.u8();
+	var iname=ir.str();
+	ir.o+=0x08;// FM: alg, fb, fms, ams, ops, opllPreset, 2 reserved
+	ir.o+=0x80;// FM: 4 operators x 32 bytes
+	ir.o+=0x04;// GB envelope
+	ir.o+=0x18;// C64
+	ir.o+=0x10;// Amiga
+	var mlens=[], mloops=[];
+	for(var j2=0x00;j2<0x04;j2++) { mlens.push(ir.i32()&0xff); }
+	if(ver>=0x11) { for(j2=0x00;j2<0x04;j2++) { mlens.push(ir.i32()&0xff); } }
+	for(j2=0x00;j2<0x04;j2++) { mloops.push(ir.i32()&0xff); }// u8 (instrument.h fait loi) : -1 -> 255
+	if(ver>=0x11) { for(j2=0x00;j2<0x04;j2++) { mloops.push(ir.i32()&0xff); } }
+	var arpMode=ir.u8();
+	ir.u8(); ir.u8(); ir.u8();// old vol/duty/wave macro heights
+	var mvals=[];
+	var readVals=function(n) {// READ_MACRO_VALS: one 32-bit read per value
+		var mv=[];
+		for(var j3=0x00;j3<n;j3++) { mv.push(ir.i32()); }
+		return mv;
+	};
+	for(j2=0x00;j2<0x08;j2++) { mvals.push(readVals(mlens[j2])); }
+	var opens=[], rels=[];
+	var algLens=[0,0,0,0], algLoops=[0,0,0,0];
+	var op=0x00;
+	if(ver>=0x1d) {// v29: FM macros (alg, fb, fms, ams) + per-operator macros
+		for(j2=0x00;j2<0x04;j2++) { algLens[j2]=ir.i32()&0xff; }
+		for(j2=0x00;j2<0x04;j2++) { algLoops[j2]=ir.i32()&0xff; }
+		for(j2=0x00;j2<0x0c;j2++) { opens.push(ir.u8()); }
+		for(j2=0x00;j2<0x04;j2++) { mvals.push(readVals(algLens[j2])); }
+		var opLens=[];
+		for(op=0x00;op<0x04;op++) {
+			var ol=[];
+			for(j2=0x00;j2<0x0c;j2++) { ol.push(ir.i32()&0xff); }
+			ir.o+=0x30;// 12 loops
+			ir.o+=0x0c;// 12 open bytes
+			opLens.push(ol);
+		}
+		for(op=0x00;op<0x04;op++) {// FM macro low 8 bits
+			for(j2=0x00;j2<0x0c;j2++) { ir.o+=opLens[op][j2]; }
+		}
+	}
+	if(ver>=0x2c) {// v44: release points (12 std + 4 ops x 12)
+		for(j2=0x00;j2<0x0c;j2++) { rels.push(ir.i32()&0xff); }
+		for(op=0x00;op<0x04;op++) { ir.o+=0x30; }
+	}
+	if(ver>=0x3d) {// v61: extended per-operator macros (discarded, AY)
+		var extLens=[];
+		for(op=0x00;op<0x04;op++) {
+			var el=[];
+			for(j2=0x00;j2<0x08;j2++) { el.push(ir.i32()&0xff); }
+			ir.o+=0x40;// 8 loops + 8 rel
+			ir.o+=0x08;// 8 open bytes
+			extLens.push(el);
+		}
+		for(op=0x00;op<0x04;op++) { for(j2=0x00;j2<0x08;j2++) { ir.o+=extLens[op][j2]; } }
+	}
+	if(ver>=0x3f) { ir.o+=0x08; }// v63: OPL drums
+	if(ver>=0x43) {// v67: sample note map (discarded, AY)
+		var unm=ir.u8();
+		if(unm!=0x00) { ir.o+=0x1e0+0xf0; }
+	}
+	if(ver>=0x49) { ir.o+=0x08; }// v73: N163
+	var panLens=[], panLoops=[], panRels=[], panOpens=[];
+	if(ver>=0x4c) {// v76: pan/phase/ex4-8 macros + FDS
+		for(j2=0x00;j2<0x08;j2++) { panLens.push(ir.i32()&0xff); }
+		for(j2=0x00;j2<0x08;j2++) { panLoops.push(ir.i32()&0xff); }
+		for(j2=0x00;j2<0x08;j2++) { panRels.push(ir.i32()&0xff); }
+		for(j2=0x00;j2<0x08;j2++) { panOpens.push(ir.u8()); }
+		for(j2=0x00;j2<0x08;j2++) { mvals.push(readVals(panLens[j2])); }
+		ir.o+=0x2c;// FDS
+	}
+	if(ver>=0x4d) { ir.o+=0x02; }// v77: OPZ fms2/ams2
+	if(ver>=0x4f) { ir.o+=0x10; }// v79: wave synth
+	var modes={vol:0, arp:0, duty:0, wave:0, pitch:0, ex1:0, ex2:0, ex3:0, alg:0, fb:0, fms:0, ams:0,
+		panL:0, panR:0, phaseReset:0, ex4:0, ex5:0, ex6:0, ex7:0, ex8:0};
+	if(ver>=0x54) {// v84: the other macro modes (19 bytes, arp not repeated)
+		modes.vol=ir.u8(); modes.duty=ir.u8(); modes.wave=ir.u8(); modes.pitch=ir.u8();
+		modes.ex1=ir.u8(); modes.ex2=ir.u8(); modes.ex3=ir.u8(); modes.alg=ir.u8(); modes.fb=ir.u8(); modes.fms=ir.u8(); modes.ams=ir.u8();
+		modes.panL=ir.u8(); modes.panR=ir.u8(); modes.phaseReset=ir.u8();
+		modes.ex4=ir.u8(); modes.ex5=ir.u8(); modes.ex6=ir.u8(); modes.ex7=ir.u8(); modes.ex8=ir.u8();
+	}
+	if(ver>=0x59) { ir.o+=0x01; }// v89: C64 noTest
+	if(ver>=0x5d) { ir.o+=0x20; }// v93: MultiPCM
+	if(ver>=0x68) { ir.o+=0x02; }// v104: amiga.useSample + su.switchRoles
+	if(ver>=0x69) {// v105: GB hardware sequence (count x [cmd u8 + data s16])
+		var hsl=ir.u8();
+		ir.o+=0x03*hsl;
+	}
+	if(ver>=0x6a) { ir.o+=0x02; }// v106: gb softEnv + alwaysInit
+	if(ver>=0x6b) { ir.o+=0x0d; }// v107: ES5506
+	if(ver>=0x6d) { ir.o+=0x07; }// v109: SNES (useEnv + 2 + a/d/s/r, same size both sides of v118)
+	var mspd=[], mdly=[];
+	if(ver>=0x6f) {// v111: 20 macro speeds then 20 delays (code order 0..19), then 4 ops x 40
+		for(var j4=0x00;j4<0x14;j4++) { mspd.push(ir.u8()); }
+		for(j4=0x00;j4<0x14;j4++) { mdly.push(ir.u8()); }
+		ir.o+=0xa0;
+	}
+	var arpModeF=arpMode;
+	if(ver<0x70&&arpMode!=0x00) {
+		arpModeF=0x00;
+		var av=mvals[0x01];
+		for(j2=0x00;j2<av.length;j2++) { av[j2]=(av[j2]^0x40000000)|0x00; }
+		var arpRel=(rels.length>0x01)?rels[0x01]:0xff;
+		if((mloops[0x01]>=mlens[0x01]||(arpRel>mloops[0x01]&&arpRel<mlens[0x01]))&&mlens[0x01]<0xff) {
+			av.push(0x00);
+			mlens[0x01]=av.length;
+		}
+	}
+	var iobj={type:itype, name:iname, macros:{}, hasSM:false};
+	var mkmac=function(code, len, loop, rel, open, mode, vals) {
+		if(len>0x00) {
+			iobj.macros[code]={len:len, loop:loop, rel:rel, mode:mode,
+				type:((open>>0x01)&0x03), activeRelease:(open&0x08)?true:false,
+				open:(open&0x01), delay:(mdly.length>code)?mdly[code]:0x00,
+				speed:(mspd.length>code)?mspd[code]:0x01, val:vals};// pre-111: no delay/speed
+		}
+	};
+	var mrel=function(idx) { return (rels.length>idx)?rels[idx]:0xff; };
+	var mopen=function(idx) { return (opens.length>idx)?opens[idx]:0x00; };
+	mkmac(0x00, mlens[0x00], mloops[0x00], mrel(0x00), mopen(0x00), modes.vol, mvals[0x00]);
+	mkmac(0x01, mlens[0x01], mloops[0x01], mrel(0x01), mopen(0x01), arpModeF, mvals[0x01]);
+	mkmac(0x02, mlens[0x02], mloops[0x02], mrel(0x02), mopen(0x02), modes.duty, mvals[0x02]);
+	mkmac(0x03, mlens[0x03], mloops[0x03], mrel(0x03), mopen(0x03), modes.wave, mvals[0x03]);
+	mkmac(0x04, mlens[0x04], mloops[0x04], mrel(0x04), mopen(0x04), modes.pitch, mvals[0x04]);
+	mkmac(0x05, mlens[0x05], mloops[0x05], mrel(0x05), mopen(0x05), modes.ex1, mvals[0x05]);
+	mkmac(0x06, mlens[0x06], mloops[0x06], mrel(0x06), mopen(0x06), modes.ex2, mvals[0x06]);
+	mkmac(0x07, mlens[0x07], mloops[0x07], mrel(0x07), mopen(0x07), modes.ex3, mvals[0x07]);
+	mkmac(0x08, algLens[0x00], algLoops[0x00], mrel(0x08), mopen(0x08), modes.alg, mvals[0x08]);
+	mkmac(0x09, algLens[0x01], algLoops[0x01], mrel(0x09), mopen(0x09), modes.fb, mvals[0x09]);
+	mkmac(0x0a, algLens[0x02], algLoops[0x02], mrel(0x0a), mopen(0x0a), modes.fms, mvals[0x0a]);
+	mkmac(0x0b, algLens[0x03], algLoops[0x03], mrel(0x0b), mopen(0x0b), modes.ams, mvals[0x0b]);
+	if(ver>=0x4c) {// v76: panL, panR, phase reset, ex4-ex8
+		mkmac(0x0c, panLens[0x00], panLoops[0x00], panRels[0x00], panOpens[0x00], modes.panL, mvals[0x0c]);
+		mkmac(0x0d, panLens[0x01], panLoops[0x01], panRels[0x01], panOpens[0x01], modes.panR, mvals[0x0d]);
+		mkmac(0x0e, panLens[0x02], panLoops[0x02], panRels[0x02], panOpens[0x02], modes.phaseReset, mvals[0x0e]);
+		mkmac(0x0f, panLens[0x03], panLoops[0x03], panRels[0x03], panOpens[0x03], modes.ex4, mvals[0x0f]);
+		mkmac(0x10, panLens[0x04], panLoops[0x04], panRels[0x04], panOpens[0x04], modes.ex5, mvals[0x10]);
+		mkmac(0x11, panLens[0x05], panLoops[0x05], panRels[0x05], panOpens[0x05], modes.ex6, mvals[0x11]);
+		mkmac(0x12, panLens[0x06], panLoops[0x06], panRels[0x06], panOpens[0x06], modes.ex7, mvals[0x12]);
+		mkmac(0x13, panLens[0x07], panLoops[0x07], panRels[0x07], panOpens[0x07], modes.ex8, mvals[0x13]);
+	}
+	if(ver<0xc1&&(itype==0x06||itype==0x07)) {
+		var wm=iobj.macros[0x03];
+		if(wm!=null) { for(j2=0x00;j2<wm.len;j2++) { wm.val[j2]++; } }
+	}
+	return iobj;
+};
+YMPlayer.prototype.furWalkPATR = function(R, po, ver, nch, patLen, effCols) {// -> {pch, pidx, psub, rows}, throws
+	var pr=new R(po+0x04);
+	pr.i32();// size, ignored
+	var pch=pr.s16();
+	var pidx=pr.s16();
+	var psub=0x00;
+	if(ver>=0x5f) { psub=pr.s16(); } else { pr.s16(); }// v95: subsong
+	pr.s16();// reserved
+	if(pch<0x00||pch>=nch||pidx<0x00||pidx>0xff) { throw "range"; }
+	var rows={};
+	for(var row=0x00;row<patLen;row++) {
+		var note=pr.s16();
+		var octv=pr.s16();
+		var pins=pr.s16();
+		var pvol=pr.s16();
+		var effs=[];
+		for(var ec2=0x00;ec2<effCols[pch];ec2++) {
+			var ecmd=pr.s16();
+			var eval2=pr.s16();
+			if(ecmd!=-0x01||eval2!=-0x01) { effs.push({e:ecmd, v:eval2}); }
+		}
+		if(note==0x00&&octv!=0x00) {// the note-12/octave-wrap fix of the loader
+			note=0x0c;
+			octv--;
+		}
+		if(note==0x00&&octv==0x00&&pins==-0x01&&pvol==-0x01&&effs.length==0x00) {
+			continue;// empty row: no cell, like the sparse modern rows
+		}
+		var cell={note:-0x01, ins:-0x01, vol:-0x01, raw:0x00, effs:effs};
+		if(note==0x64) { cell.note=0xb4; }// 100: note off
+		else if(note==0x65) { cell.note=0xb5; }// 101: off + envelope release
+		else if(note==0x66) { cell.note=0xb6; }// 102: macro release
+		else if(note!=0x00||octv!=0x00) { cell.note=0x0c*octv+note+0x3c; }// +60 : espace octet du format moderne (newFormatNotes fait loi, lot 202611.93.102.1)
+		if(pins!=-0x01) { cell.ins=pins; }
+		if(pvol!=-0x01) { cell.vol=pvol; }
+		rows[row]=cell;
+	}
+	if(ver>=0x33) { pr.str(); }// v51: pattern name
+	return {pch:pch, pidx:pidx, psub:psub, rows:rows};
+};
+
 YMPlayer.prototype.furParse = function(d) {// full module walk -> {ver, song, flag, ins,
 	// pats} or null (this.furError carries the reason). The block chain from songInfoSeek
 	var b=this.furLoad(d);
@@ -34094,6 +34316,8 @@ YMPlayer.prototype.furParse = function(d) {// full module walk -> {ver, song, fl
 		i8:function() { return (b[this.o++]<<24)>>24; },
 		u16:function() { var v=b[this.o]|(b[this.o+0x01]<<0x08); this.o+=0x02; return v; },
 		u32:function() { var v=b[this.o]|(b[this.o+0x01]<<0x08)|(b[this.o+0x02]<<0x10)|(b[this.o+0x03]<<0x18); this.o+=0x04; return v>>>0x00; },
+		i32:function() { return this.u32()|0x00; },// shared INST/PATR walks (v119..156)
+		s16:function() { var v=this.u16(); return (v<<0x10)>>0x10; },
 		f32:function() { var q=b[this.o]|(b[this.o+0x01]<<0x08)|(b[this.o+0x02]<<0x10)|(b[this.o+0x03]<<0x18); this.o+=0x04;
 			var s=(q>>0x1f)?-0x01:0x01, e=(q>>0x17)&0xff, m=q&0x7fffff;
 			if(e==0x00) { return s*m*Math.pow(0x02,-0x95); }
@@ -34117,7 +34341,10 @@ YMPlayer.prototype.furParse = function(d) {// full module walk -> {ver, song, fl
 		}
 	};
 	var ver=b[0x10]|(b[0x11]<<0x08);
-	if(ver<0x9d||ver>0xef) {// 157 <= v <= 239: PATN patterns, pre-INF2 header
+	if(ver>=0x21&&ver<0x77) {// 33 <= v <= 118: old flat layout (INST/PATR)
+		return this.furParseOld(d);
+	}
+	if(ver>0xef) {// 119 <= v <= 239: PATR patterns until v156, PATN from v157 (lot 202611.93.103)
 		this.furError="unsupported format version "+ver;
 		return null;
 	}
@@ -34284,8 +34511,10 @@ YMPlayer.prototype.furParse = function(d) {// full module walk -> {ver, song, fl
 	cf.jumpTreatment=r.u8();
 	cf.autoSystem=r.u8();
 	cf.disableSampleMacro=r.u8();
-	cf.brokenOutVol2=r.u8();
-	cf.oldArpStrategy=r.u8();
+	var bov2=r.u8();// the byte rides the fixed v70+ run, the value only counts from v121
+	cf.brokenOutVol2=(ver>=0x79)?bov2:0x00;// engine default false before (fileOps.cpp fait loi)
+	var oas=r.u8();
+	cf.oldArpStrategy=(ver>=0x82)?oas:0x01;// engine default true before
 	song.vtNum=Math.max(0x01, r.u16());// virtual tempo numerator
 	song.vtDen=Math.max(0x01, r.u16());// virtual tempo denominator
 	r.str();// subsong name
@@ -34301,34 +34530,54 @@ YMPlayer.prototype.furParse = function(d) {// full module walk -> {ver, song, fl
 	r.str();// authorJ
 	r.str();// systemNameJ
 	r.str();// categoryJ
-	for(k=0x00;k<chips.length;k++) {// system output config: 3 floats per chip
-		r.f32(); r.f32(); r.f32();
+	if(ver>=0x87) {// v135: system output config + patchbay (absent before)
+		for(k=0x00;k<chips.length;k++) {// 3 floats per chip
+			r.f32(); r.f32(); r.f32();
+		}
+		var conns=r.u32();// patchbay
+		r.o+=0x04*conns;
 	}
-	var conns=r.u32();// patchbay
-	r.o+=0x04*conns;
-	r.u8();// patchbayAuto (v>=136)
-	cf.brokenPortaLegato=r.u8();
-	cf.brokenFMOff=r.u8();
-	var preNoteNoEffect=r.u8(); cf.preNoteNoEffect=(ver>=0xa8)?preNoteNoEffect:0x01;
-	var oldDPCM=r.u8(); cf.oldDPCM=(ver>=0xb7)?oldDPCM:0x01;
-	var resetArpPhaseOnNewNote=r.u8(); cf.resetArpPhaseOnNewNote=(ver>=0xb8)?resetArpPhaseOnNewNote:0x00;
-	var ceilVolumeScaling=r.u8(); cf.ceilVolumeScaling=(ver>=0xbc)?ceilVolumeScaling:0x00;
-	var oldAlwaysSetVolume=r.u8(); cf.oldAlwaysSetVolume=(ver>=0xbf)?oldAlwaysSetVolume:0x01;
-	var oldSampleOffset=r.u8(); cf.oldSampleOffset=(ver>=0xc8)?oldSampleOffset:0x01;
-	var spLen=r.u8();
-	var spVal=[];
-	for(k=0x00;k<0x10;k++) { spVal.push(r.u8()); }
-	song.speeds={len:Math.max(0x01,spLen), val:spVal};
-	var grooveN=r.u8();
-	song.grooves=[];
-	for(k=0x00;k<grooveN;k++) {
-		var gl=r.u8();
-		var gv=[];
-		for(j=0x00;j<0x10;j++) { gv.push(r.u8()); }
-		song.grooves.push({len:gl, val:gv});
+	if(ver>=0x88) { r.u8(); }// patchbayAuto (v>=136)
+	// brokenFMOff, preNoteNoEffect, oldDPCM, resetArpPhaseOnNewNote + 3 reserved) - a
+	if(ver>=0x8a) {
+		cf.brokenPortaLegato=r.u8();
+		var bfm=r.u8();
+		cf.brokenFMOff=(ver>=0x9b)?bfm:0x01;// engine default true before v155
+		var preNoteNoEffect=r.u8(); cf.preNoteNoEffect=(ver>=0xa8)?preNoteNoEffect:0x01;
+		var oldDPCM=r.u8(); cf.oldDPCM=(ver>=0xb7)?oldDPCM:0x01;
+		var resetArpPhaseOnNewNote=r.u8(); cf.resetArpPhaseOnNewNote=(ver>=0xb8)?resetArpPhaseOnNewNote:0x00;
+		var ceilVolumeScaling=r.u8(); cf.ceilVolumeScaling=(ver>=0xbc)?ceilVolumeScaling:0x00;
+		var oldAlwaysSetVolume=r.u8(); cf.oldAlwaysSetVolume=(ver>=0xbf)?oldAlwaysSetVolume:0x01;
+		var oldSampleOffset=r.u8(); cf.oldSampleOffset=(ver>=0xc8)?oldSampleOffset:0x01;
+	} else {
+		cf.brokenPortaLegato=0x01;
+		cf.brokenFMOff=0x01;
+		cf.preNoteNoEffect=0x01;
+		cf.oldDPCM=0x01;
+		cf.resetArpPhaseOnNewNote=0x00;
+		cf.ceilVolumeScaling=0x00;
+		cf.oldAlwaysSetVolume=0x01;
+		cf.oldSampleOffset=0x01;
 	}
-	r.o+=0x0c;// asset directory pointers (v>=156)
-	for(k=0x00;k<0x10;k++) {// speeds are scaled by the time base
+	if(ver>=0x8b) {
+		var spLen=r.u8();
+		var spVal=[];
+		for(k=0x00;k<0x10;k++) { spVal.push(r.u8()); }
+		song.speeds={len:Math.max(0x01,spLen), val:spVal};
+		var grooveN=r.u8();
+		song.grooves=[];
+		for(k=0x00;k<grooveN;k++) {
+			var gl=r.u8();
+			var gv=[];
+			for(j=0x00;j<0x10;j++) { gv.push(r.u8()); }
+			song.grooves.push({len:gl, val:gv});
+		}
+	} else {
+		song.speeds={len:0x02, val:[song.speed1, song.speed2]};
+		song.grooves=[];
+	}
+	if(ver>=0x9c) { r.o+=0x0c; }// asset directory pointers (v>=156)
+	for(k=0x00;k<song.speeds.val.length;k++) {// speeds are scaled by the time base
 		song.speeds.val[k]*=(song.timeBase+0x01);
 	}
 	if(r.o!=infoEnd) {
@@ -34377,9 +34626,22 @@ YMPlayer.prototype.furParse = function(d) {// full module walk -> {ver, song, fl
 		if(io==0x00) {
 			continue;
 		}
-		if(io+0x08>b.length||String.fromCharCode(b[io],b[io+0x01],b[io+0x02],b[io+0x03])!="INS2") {
+		var imag="";
+		if(io+0x08<=b.length) {
+			imag=String.fromCharCode(b[io],b[io+0x01],b[io+0x02],b[io+0x03]);
+		}
+		if(imag!="INS2"&&imag!="INST") {// readInsData sniffs the magic: INS2 from v127
 			this.furError="corrupt INS2 block";
 			return null;
+		}
+		if(imag=="INST") {// the old instrument layout survives until v126 (lot 202611.93.103)
+			try {
+				ins[k]=this.furWalkINST(R, io, ver);
+			} catch(e) {
+				this.furError="corrupt INST block";
+				return null;
+			}
+			continue;
 		}
 		var ir=new R(io+0x08);
 		var iend=io+0x08+(b[io+0x04]|(b[io+0x05]<<0x08)|(b[io+0x06]<<0x10)|(b[io+0x07]<<0x18));
@@ -34460,9 +34722,25 @@ YMPlayer.prototype.furParse = function(d) {// full module walk -> {ver, song, fl
 		if(po==0x00) {
 			continue;
 		}
-		if(po+0x08>b.length||String.fromCharCode(b[po],b[po+0x01],b[po+0x02],b[po+0x03])!="PATN") {
+		var pmag="";
+		if(po+0x08<=b.length) {
+			pmag=String.fromCharCode(b[po],b[po+0x01],b[po+0x02],b[po+0x03]);
+		}
+		if(pmag!="PATN"&&pmag!="PATR") {// PATR is the pattern layout until v157 (fur.cpp fait loi)
 			this.furError="corrupt PATN block";
 			return null;
+		}
+		if(pmag=="PATR") {// full rows instead of the sparse PATN packing
+			try {
+				var prow=this.furWalkPATR(R, po, ver, nch, song.patLen, song.effCols);
+				if(prow.psub==0x00) {// subsong 0 only
+					pats[prow.pch+":"+prow.pidx]=prow.rows;
+				}
+			} catch(e) {
+				this.furError="corrupt PATR block";
+				return null;
+			}
+			continue;
 		}
 		var pr=new R(po+0x08);
 		var pend=po+0x08+(b[po+0x04]|(b[po+0x05]<<0x08)|(b[po+0x06]<<0x10)|(b[po+0x07]<<0x18));
@@ -34522,6 +34800,293 @@ YMPlayer.prototype.furParse = function(d) {// full module walk -> {ver, song, fl
 		}
 		if(psub==0x00) {
 			pats[pch+":"+pidx]=rows;
+		}
+	}
+	return {ver:ver, song:song, flag:flag, ins:ins, pats:pats};
+};
+
+// threshold (defaults list 43..184 of fileOps.cpp). v<96 files carry no virtual tempo
+// gap (the savers did not write it; Furnace reads a stray int anyway because all later
+// modes at v84 and the macro open byte carries the ADSR/LFO type in bits 1-2 -
+YMPlayer.prototype.furParseOld = function(d) {// old flat walk -> {ver, song, flag, ins,
+	var b=this.furLoad(d);
+	if(b==null) {
+		this.furError="not a Furnace module";
+		return null;
+	}
+	var R=function(o) {// little-endian reader over the module bytes, bounds-checked
+		this.o=o;
+	};
+	R.prototype={
+		chk:function(n) { if(this.o+n>b.length) { throw "eof"; } },
+		u8:function() { this.chk(0x01); return b[this.o++]; },
+		u16:function() { this.chk(0x02); var v=b[this.o]|(b[this.o+0x01]<<0x08); this.o+=0x02; return v; },
+		s16:function() { this.chk(0x02); var v=b[this.o]|(b[this.o+0x01]<<0x08); this.o+=0x02; return (v<<0x10)>>0x10; },
+		u32:function() { this.chk(0x04); var v=b[this.o]|(b[this.o+0x01]<<0x08)|(b[this.o+0x02]<<0x10)|(b[this.o+0x03]<<0x18); this.o+=0x04; return v>>>0x00; },
+		i32:function() { return this.u32()|0x00; },
+		f32:function() { this.chk(0x04); var q=b[this.o]|(b[this.o+0x01]<<0x08)|(b[this.o+0x02]<<0x10)|(b[this.o+0x03]<<0x18); this.o+=0x04;
+			var s=(q>>0x1f)?-0x01:0x01, e=(q>>0x17)&0xff, m=q&0x7fffff;
+			if(e==0x00) { return s*m*Math.pow(0x02,-0x95); }
+			if(e==0xff) { return m==0x00?s*Infinity:NaN; }
+			return s*(m+0x800000)*Math.pow(0x02,e-0x96);
+		},
+		str:function() {// zero-terminated UTF-8 string
+			var e=this.o;
+			while(e<b.length&&b[e]!=0x00) { e++; }
+			if(e>=b.length) { throw "eof"; }
+			var s="";
+			var p=this.o;
+			while(p<e) {
+				var c=b[p];
+				if(c<0x80) { s+=String.fromCharCode(c); p++; }
+				else if(c<0xe0) { s+=String.fromCharCode(((c&0x1f)<<0x06)|(b[p+0x01]&0x3f)); p+=0x02; }
+				else if(c<0xf0) { s+=String.fromCharCode(((c&0x0f)<<0x0c)|((b[p+0x01]&0x3f)<<0x06)|(b[p+0x02]&0x3f)); p+=0x03; }
+				else { s+=String.fromCharCode(((c&0x07)<<0x12)|((b[p+0x01]&0x3f)<<0x0c)|((b[p+0x02]&0x3f)<<0x06)|(b[p+0x03]&0x3f)); p+=0x04; }
+			}
+			this.o=e+0x01;
+			return s;
+		}
+	};
+	var ver=b[0x10]|(b[0x11]<<0x08);
+	if(ver<0x21||ver>0x76) {// the layout this walker knows
+		this.furError="unsupported format version "+ver;
+		return null;
+	}
+	var seek=b[0x14]|(b[0x15]<<0x08)|(b[0x16]<<0x10)|(b[0x17]<<0x18);
+	if(seek<0x20||seek+0x08>b.length||String.fromCharCode(b[seek],b[seek+0x01],b[seek+0x02],b[seek+0x03])!="INFO") {
+		this.furError="corrupt header";
+		return null;
+	}
+	var r=new R(seek+0x08);
+	var song={};
+	var speed1=0x00, speed2=0x00, insN=0x00, waveN=0x00, sampN=0x00, patN=0x00, sysFlags=[];
+	try {
+		song.timeBase=r.u8();
+		speed1=r.u8();
+		speed2=r.u8();
+		r.u8();// arpLen: forced to 1
+		song.arpLen=0x01;
+		song.tps=r.f32();
+		song.patLen=r.s16();
+		song.ordLen=r.s16();
+		song.hlA=r.u8();
+		song.hlB=r.u8();
+		insN=r.s16(); waveN=r.s16(); sampN=r.s16(); patN=r.u32();
+		if(song.patLen<0x01||song.patLen>0x100||song.ordLen<0x01||song.ordLen>0x100||insN<0x00||insN>0x100||waveN<0x00||waveN>0x100||sampN<0x00||sampN>0x100||patN>0x10000) {
+			this.furError="corrupt INFO block";
+			return null;
+		}
+		var chips=[];
+		for(var k=0x00;k<0x20;k++) {// 32 system slots, zero-padded
+			var sys=r.u8();
+			if(sys!=0x00) { chips.push(sys); }
+		}
+		for(k=0x00;k<0x20;k++) { r.u8(); }// per-chip volumes
+		for(k=0x00;k<0x20;k++) { r.u8(); }// per-chip panning
+		for(k=0x00;k<0x20;k++) { sysFlags.push(r.u32()); }
+		if(chips.length!=0x01||chips[0x00]!=0x80) {// same single-AY gate as the modern path
+			this.furError="not a single AY-3-8910 system";
+			return null;
+		}
+		var nch=0x03;
+		song.name=r.str();
+		song.author=r.str();
+		song.tuning=r.f32();// a4 reference, v>=33
+		var cf={};
+		var cflag=function(stored, def) {// one byte either way, the value only counts past its threshold
+			var v=r.u8();
+			return stored?v:def;
+		};
+		cf.limitSlides=cflag(ver>=0x25,0x01);// v37: the pre-37 defaults
+		cf.linearPitch=cflag(ver>=0x25,0x01);
+		cf.loopModality=cflag(ver>=0x25,0x00);
+		cf.properNoiseLayout=cflag(ver>=0x2b,0x00);// v43
+		cf.waveDutyIsVol=cflag(ver>=0x2b,0x00);
+		cf.resetMacroOnPorta=cflag(ver>=0x2d,0x01);// v45
+		cf.legacyVolumeSlides=cflag(ver>=0x2d,0x01);
+		cf.compatibleArpeggio=cflag(ver>=0x2d,0x01);
+		cf.noteOffResetsSlides=cflag(ver>=0x2d,0x01);
+		cf.targetResetsSlides=cflag(ver>=0x2d,0x01);
+		cf.arpNonPorta=cflag(ver>=0x2f,(ver<0x2e)?0x01:0x00);
+		cf.algMacroBehavior=cflag(ver>=0x2f,(ver<0x2e)?0x01:0x00);
+		cf.brokenShortcutSlides=cflag(ver>=0x31,0x01);// v49
+		cf.ignoreDuplicateSlides=cflag(ver>=0x32,0x00);// v50
+		cf.stopPortaOnNoteOff=cflag(ver>=0x3e,0x01);// v62
+		cf.continuousVibrato=cflag(ver>=0x3e,0x00);
+		cf.brokenDACMode=cflag(ver>=0x40,0x00);// v64
+		cf.oneTickCut=cflag(ver>=0x41,0x00);// v65
+		cf.newInsTriggersInPorta=cflag(ver>=0x42,0x00);// v66
+		cf.arp0Reset=cflag(ver>=0x45,0x00);// v69
+		var insPtrs=[], wavePtrs=[], sampPtrs=[], patPtrs=[];
+		for(k=0x00;k<insN;k++) { insPtrs.push(r.u32()); }
+		for(k=0x00;k<waveN;k++) { wavePtrs.push(r.u32()); }
+		for(k=0x00;k<sampN;k++) { sampPtrs.push(r.u32()); }
+		for(k=0x00;k<patN;k++) { patPtrs.push(r.u32()); }
+		song.orders=[];
+		for(k=0x00;k<nch;k++) {
+			var ord=[];
+			for(var j=0x00;j<song.ordLen;j++) { ord.push(r.u8()); }
+			song.orders.push(ord);
+		}
+		song.effCols=[];
+		for(k=0x00;k<nch;k++) {
+			var ec=r.u8();
+			if(ec<0x01||ec>0x08) {
+				this.furError="corrupt INFO block (effect columns)";
+				return null;
+			}
+			song.effCols.push(ec);
+		}
+		if(ver>=0x27) {// v39: channel display state, names, song notes
+			for(k=0x00;k<nch;k++) { r.u8(); }
+			for(k=0x00;k<nch;k++) { r.u8(); }
+			for(k=0x00;k<nch;k++) { r.str(); }
+			for(k=0x00;k<nch;k++) { r.str(); }
+			r.str();
+		}
+		if(ver>=0x3b) { r.f32(); }// v59: master volume (unused by the renderer)
+		if(ver>=0x46) {// v70: the 28 extended compatibility bytes
+			cf.brokenSpeedSel=cflag(ver>=0x46,0x00);
+			cf.noSlidesOnFirstTick=cflag(ver>=0x47,0x00);// v71
+			cf.rowResetsArpPos=cflag(ver>=0x47,0x00);
+			cf.ignoreJumpAtEnd=cflag(ver>=0x47,0x01);
+			cf.buggyPortaAfterSlide=cflag(ver>=0x48,0x01);// v72
+			cf.gbInsAffectsEnvelope=cflag(ver>=0x48,0x00);
+			cf.sharedExtStat=cflag(ver>=0x4e,0x00);// v78
+			cf.ignoreDACModeOutsideIntendedChannel=cflag(ver>=0x53,0x01);// v83
+			cf.e1e2AlsoTakePriority=cflag(ver>=0x53,0x00);
+			cf.newSegaPCM=cflag(ver>=0x54,0x00);// v84
+			cf.fbPortaPause=cflag(ver>=0x55,0x01);// v85
+			cf.snDutyReset=cflag(ver>=0x56,0x01);// v86
+			cf.pitchMacroIsLinear=cflag(ver>=0x5a,0x00);// v90
+			cf.pitchSlideSpeed=cflag(ver>=0x5e,0x01);// v94
+			cf.oldOctaveBoundary=cflag(ver>=0x61,0x01);// v97
+			cf.noOPN2Vol=cflag(ver>=0x62,0x01);// v98
+			cf.newVolumeScaling=cflag(ver>=0x63,0x00);// v99
+			cf.volMacroLinger=cflag(ver>=0x63,0x00);
+			cf.brokenOutVol=cflag(ver>=0x63,0x01);
+			cf.e1e2StopOnSameNote=cflag(ver>=0x64,0x00);// v100
+			cf.brokenPortaArp=cflag(ver>=0x65,0x01);// v101
+			cf.snNoLowPeriods=cflag(ver>=0x6c,0x01);// v108
+			cf.delayBehavior=cflag(ver>=0x6e,0x01);// v110
+			cf.jumpTreatment=cflag(ver>=0x71,0x01);// v113
+			cf.autoSystem=cflag(ver>=0x73,0x00);// v115
+			cf.disableSampleMacro=cflag(ver>=0x75,0x01);// v117
+			cf.brokenOutVol2=cflag(ver>=0x79,0x00);// v121
+			cf.oldArpStrategy=cflag(ver>=0x82,0x01);// v130
+		} else {// v<70: no extended bytes, the loader defaults still apply
+			cf.brokenSpeedSel=0x00;
+			cf.noSlidesOnFirstTick=0x00;
+			cf.rowResetsArpPos=0x00;
+			cf.ignoreJumpAtEnd=0x01;
+			cf.buggyPortaAfterSlide=0x01;
+			cf.gbInsAffectsEnvelope=0x00;
+			cf.sharedExtStat=0x00;
+			cf.ignoreDACModeOutsideIntendedChannel=0x01;
+			cf.e1e2AlsoTakePriority=0x00;
+			cf.newSegaPCM=0x00;
+			cf.fbPortaPause=0x01;
+			cf.snDutyReset=0x01;
+			cf.pitchMacroIsLinear=0x00;
+			cf.pitchSlideSpeed=0x01;
+			cf.oldOctaveBoundary=0x01;
+			cf.noOPN2Vol=0x01;
+			cf.newVolumeScaling=0x00;
+			cf.volMacroLinger=0x00;
+			cf.brokenOutVol=0x01;
+			cf.e1e2StopOnSameNote=0x00;
+			cf.brokenPortaArp=0x01;
+			cf.snNoLowPeriods=0x01;
+			cf.delayBehavior=0x01;
+			cf.jumpTreatment=0x01;
+			cf.autoSystem=0x00;
+			cf.disableSampleMacro=0x01;
+			cf.brokenOutVol2=0x00;
+			cf.oldArpStrategy=0x01;
+		}
+		if(ver>=0x60) {// v96: virtual tempo (v<96 files carry no gap here)
+			song.vtNum=Math.max(0x01, r.s16());
+			song.vtDen=Math.max(0x01, r.s16());
+		} else {
+			song.vtNum=0x01;
+			song.vtDen=0x01;
+		}
+		if(ver>=0x5f) {// v95: subsongs 1+ (subsong 0 only is rendered)
+			r.str(); r.str();
+			var subN=r.u8();
+			r.o+=0x03;
+			for(k=0x00;k<subN;k++) { r.u32(); }
+		}
+		if(ver>=0x67) {// v103: legacy metadata
+			r.str(); r.str(); r.str(); r.str(); r.str(); r.str();
+		}
+	} catch(e) {
+		this.furError="corrupt INFO block";
+		return null;
+	}
+	cf.brokenPortaLegato=0x01;// v138
+	cf.brokenFMOff=0x01;// v155
+	cf.preNoteNoEffect=0x01;// v168
+	cf.oldDPCM=0x01;// v183
+	cf.resetArpPhaseOnNewNote=0x00;// v184
+	cf.ceilVolumeScaling=0x00;
+	cf.oldAlwaysSetVolume=0x01;
+	cf.oldSampleOffset=0x01;
+	song.speeds={len:0x02, val:[speed1, speed2]};// pre-139: two speeds only
+	for(var k2=0x00;k2<0x02;k2++) { song.speeds.val[k2]*=(song.timeBase+0x01); }
+	song.grooves=[];// pre-139: no grooves
+	song.subPtrs=[];
+	if(!(song.tps>=0x01&&song.tps<=0x168)) {
+		this.furError="invalid tick rate";
+		return null;
+	}
+	song.compat=cf;
+	// ---- old chip flags: v<119 carries the VALUE, not a block pointer
+	var flag={chipType:0x00, clockSel:0x00, customClock:0x00, halfClock:false, stereo:false, stereoSep:0x00};
+	var oldfl=sysFlags[0x00];
+	if(oldfl!=0x00) {// convertOldFlags (fileOps.cpp fait loi)
+		flag.clockSel=oldfl&0x0f;
+		flag.chipType=(oldfl>>0x04)&0x03;
+		flag.stereo=(oldfl&0x40)?true:false;
+		flag.halfClock=(oldfl&0x80)?true:false;
+		flag.stereoSep=(oldfl>>0x08)&0xff;
+	}
+	if(flag.chipType>0x01) {// 2 = Sunsoft 5B, 3 = AY8914
+		this.furError="unsupported chip type "+flag.chipType;
+		return null;
+	}
+	var ins=[];
+	for(k2=0x00;k2<insN;k2++) { ins.push(null); }
+	for(k2=0x00;k2<insN;k2++) {
+		var io=insPtrs[k2];
+		if(io==0x00) { continue; }
+		if(io+0x0c>b.length||String.fromCharCode(b[io],b[io+0x01],b[io+0x02],b[io+0x03])!="INST") {
+			this.furError="corrupt INST block";
+			return null;
+		}
+		try {
+			ins[k2]=this.furWalkINST(R, io, ver);
+		} catch(e) {
+			this.furError="corrupt INST block";
+			return null;
+		}
+	}
+	var pats={};
+	for(k2=0x00;k2<patN;k2++) {
+		var po=patPtrs[k2];
+		if(po==0x00) { continue; }
+		if(po+0x10>b.length||String.fromCharCode(b[po],b[po+0x01],b[po+0x02],b[po+0x03])!="PATR") {
+			this.furError="corrupt PATR block";
+			return null;
+		}
+		try {
+			var prow=this.furWalkPATR(R, po, ver, nch, song.patLen, song.effCols);
+			if(prow.psub==0x00) {// subsong 0 only
+				pats[prow.pch+":"+prow.pidx]=prow.rows;
+			}
+		} catch(e) {
+			this.furError="corrupt PATR block";
+			return null;
 		}
 	}
 	return {ver:ver, song:song, flag:flag, ins:ins, pats:pats};
@@ -34809,6 +35374,14 @@ YMPlayer.prototype.furRender=function(parsed) {
 		if(ch.fixedArp) { return pt.get(ch.baseNoteOverride<<0x07, ch.pitch, ch.pitch2); }
 		return pt.get(ch.baseFreq+(ch.arpOff<<0x07), ch.pitch, ch.pitch2);
 	}
+	function calcArp(note, arp) {// DivEngine::calcArp (offset 0) fait loi : arp fixed = note absolue
+		if(arp<0x00) {
+			if((arp&RAW)==0x00) { return (arp|RAW)+0x3c; }
+		} else {
+			if((arp&RAW)!=0x00) { return (arp&(~RAW))+0x3c; }
+		}
+		return note+arp;
+	}
 	function handleArp(ch) {
 		var arp=ch.std.slots.arp;
 		if(arp.had) {
@@ -35005,7 +35578,7 @@ YMPlayer.prototype.furRender=function(parsed) {
 			}
 			if(NEW_ARP_STRAT) { handleArp(ch); }
 			else if(st.arp.had&&!ch.rawFreq) {
-				if(!ch.inPorta) { ch.baseFreq=calcBase(ch, ch.note+st.arp.val); }
+				if(!ch.inPorta) { ch.baseFreq=calcBase(ch, calcArp(ch.note, st.arp.val)); }
 				ch.freqChanged=true;
 			}
 			if(st.duty.had) { rWrite(0x06,0x1f-st.duty.val); }
@@ -36019,6 +36592,7 @@ YMPlayer.prototype.initFur = function(d, b) {
 		console.log("FUR: no frame rendered !");
 		return;
 	}
+	this.furVer=parsed.ver;// version Furnace du module - cartouche (lot 202611.93.102.1)
 	this.trackView=dump.trackView;// piste pattern multi-canaux (l'octave base voyage dans le dump)
 	this.data=dump.data;
 	this.frameSize=dump.frameSize;
@@ -36045,7 +36619,7 @@ if(typeof YM_DECODERS!="undefined") {
 <script>
 "use strict"
 
-// AY-3-8910 emulation (c) 2015-2026 Megachur
+// AY-3-8910 emulation (c) 2014-2026 Megachur
 
 // Copyright Yoann Courtois, all rights reserved.
 
@@ -36313,9 +36887,9 @@ ay8910.prototype.write = function() {
 						case 0x01:
 						case 0x02:
 						case 0x03:
+						case 0x08:
 						case 0x09:
 						case 0x0b:
-						case 0x08:
 							this.envNextLevel=0x0f;
 							this.envDir=0x00; // down
 						break;
@@ -36328,9 +36902,9 @@ ay8910.prototype.write = function() {
 						case 0x05:
 						case 0x06:
 						case 0x07:
+						case 0x0c:
 						case 0x0d:
 						case 0x0f:
-						case 0x0c:
 							this.envNextLevel=0x00;
 							this.envDir=0x01; // up
 						break;
@@ -39161,7 +39735,7 @@ var I18N={
 	"ui.prev":"Previous file","ui.next":"Next file","ui.controls":"Playback controls",
 	"ui.lang":"Interface language","ui.skins":"Interface skin",
 	"ui.skinNext":"Change theme (click the machine name)",
-	"ui.compact":"Compact","ui.expand":"Expand",
+	"ui.compact":"Compact","ui.expand":"Expand","ui.fullwidth":"Full width",
 	"ui.fold":"Collapse panel","ui.unfold":"Expand panel",
 	"ui.schemeToggle":"Toggle light/dark color scheme",
 	"ui.chip":"Chip :","ui.clock":"Clock :","ui.clockAuto":"Auto (format's own)","ui.chipAuto":"Auto (format's own)",
@@ -39177,7 +39751,7 @@ var I18N={
 	"cart.hintText":"Load a music file to display the details of its format.",
 	"cart.format":"Format","cart.filename":"Filename","cart.fileSize":"File size",
 	"cart.bitrate":"Bitrate","cart.audio":"Audio","cart.album":"Album",
-	"cart.chip":"Chip","cart.masterClock":"Master clock",
+	"cart.chip":"Chip","cart.masterClock":"Master clock","cart.furVersion":"Furnace version",
 	"cart.title":"Title","cart.author":"Author","cart.comment":"Comment",
 	"cart.fromProgram":"From program","cart.madeWith":"Made with","cart.year":"Year",
 	"cart.stereoLayout":"Stereo layout","cart.songName":"Song name","cart.authorName":"Author name",
@@ -39290,7 +39864,7 @@ var I18N={
 
 	"help.btnLang":"cycles the interface language: English → Français → Español → Deutsch → Italiano.",
 	"help.btnSkin":"clicking the machine badge changes the interface skin (15 themes).",
-	"help.btnCompact":"switches between the compact bar and the expanded page.",
+	"help.btnCompact":"cycles the page view: normal, full browser width, compact bar.",
 	"help.btnScheme":"toggles the light/dark color scheme.",
 	"help.btnFold":"collapses or expands a panel (cartouche, registers, waves, playlist).",
 	"help.keysTitle":"Keyboard shortcuts",
@@ -39304,7 +39878,7 @@ var I18N={
 	"help.keyRandom":"toggle random next track",
 	"help.keyZoom":"zoom the wave/cover view in (Shift+Z: out)",
 	"help.keyHelp":"open / close this help",
-	"help.keyCompact":"toggle compact mode",
+	"help.keyCompact":"cycle the page view (normal / full width / compact)",
 	"help.btnHelp":"opens this help in a popup window, or in a side panel on the right when the browser blocks popups.",
 	"help.featuresTitle":"Features",
 	"help.fLocal":"100% local player: no server, no network — works from a plain HTML file (ScriptProcessor fallback on file:// pages).",
@@ -39322,7 +39896,7 @@ var I18N={
 	"ui.prev":"Fichier précédent","ui.next":"Fichier suivant","ui.controls":"Commandes de lecture",
 	"ui.lang":"Langue de l'interface","ui.skins":"Habillage de l'interface",
 	"ui.skinNext":"Changer de thème (cliquer sur le nom de la machine)",
-	"ui.compact":"Compacter","ui.expand":"Étendre",
+	"ui.compact":"Compacter","ui.expand":"Étendre","ui.fullwidth":"Pleine largeur",
 	"ui.fold":"Replier la zone","ui.unfold":"Déplier la zone",
 	"ui.schemeToggle":"Basculer le schéma clair/sombre",
 	"ui.chip":"Puce :","ui.clock":"Horloge :","ui.clockAuto":"Auto (celle du format)","ui.chipAuto":"Auto (celle du format)",
@@ -39340,7 +39914,7 @@ var I18N={
 	"cart.filename":"Nom du fichier","cart.fileSize":"Taille du fichier",
 	"cart.bitrate":"Débit","cart.audio":"Audio","cart.album":"Album",
 	"cart.format":"Format","cart.chip":"Circuit",
-	"cart.masterClock":"Horloge maître",
+	"cart.masterClock":"Horloge maître","cart.furVersion":"Version Furnace",
 	"cart.title":"Titre","cart.author":"Auteur","cart.comment":"Commentaire",
 	"cart.fromProgram":"Du programme","cart.madeWith":"Réalisé avec","cart.year":"Année",
 	"cart.stereoLayout":"Disposition stéréo","cart.songName":"Nom de la chanson","cart.authorName":"Nom de l'auteur",
@@ -39450,7 +40024,7 @@ var I18N={
 
 	"help.btnLang":"fait défiler la langue de l'interface : English → Français → Español → Deutsch → Italiano.",
 	"help.btnSkin":"cliquer sur le badge de machine change le skin de l'interface (15 thèmes).",
-	"help.btnCompact":"bascule entre la barre compacte et la page étendue.",
+	"help.btnCompact":"enchaîne la vue de la page : normale, pleine largeur du navigateur, barre compacte.",
 	"help.btnScheme":"bascule le jeu de couleurs clair/sombre.",
 	"help.btnFold":"replie ou déplie un panneau (cartouche, registres, ondes, liste de lecture).",
 	"help.keysTitle":"Raccourcis clavier",
@@ -39464,7 +40038,7 @@ var I18N={
 	"help.keyRandom":"activer/désactiver la piste suivante aléatoire",
 	"help.keyZoom":"agrandir la vue onde/pochette (Shift+Z : réduire)",
 	"help.keyHelp":"ouvrir / fermer cette aide",
-	"help.keyCompact":"activer/désactiver le mode compact",
+	"help.keyCompact":"faire défiler la vue de la page (normale / pleine largeur / compacte)",
 	"help.btnHelp":"ouvre cette aide dans une fenêtre pop-up, ou dans un panneau latéral à droite quand le navigateur bloque les pop-ups.",
 	"help.featuresTitle":"Fonctionnalités",
 	"help.fLocal":"player 100 % local : aucun serveur, aucun réseau — fonctionne depuis un simple fichier HTML (repli ScriptProcessor en page file://).",
@@ -39482,7 +40056,7 @@ var I18N={
 	"ui.prev":"Archivo anterior","ui.next":"Archivo siguiente","ui.controls":"Controles de reproducción",
 	"ui.lang":"Idioma de la interfaz","ui.skins":"Estilo de la interfaz",
 	"ui.skinNext":"Cambiar de tema (clic en el nombre de la máquina)",
-	"ui.compact":"Compactar","ui.expand":"Expandir",
+	"ui.compact":"Compactar","ui.expand":"Expandir","ui.fullwidth":"Ancho total",
 	"ui.fold":"Replegar el panel","ui.unfold":"Desplegar el panel",
 	"ui.schemeToggle":"Alternar el esquema claro/oscuro",
 	"ui.chip":"Chip :","ui.clock":"Reloj :","ui.clockAuto":"Auto (la del formato)","ui.chipAuto":"Auto (la del formato)",
@@ -39500,7 +40074,7 @@ var I18N={
 	"cart.filename":"Nombre de archivo","cart.fileSize":"Tamaño del archivo",
 	"cart.bitrate":"Tasa de bits","cart.audio":"Audio","cart.album":"Álbum",
 	"cart.format":"Formato","cart.chip":"Chip",
-	"cart.masterClock":"Reloj maestro",
+	"cart.masterClock":"Reloj maestro","cart.furVersion":"Versión de Furnace",
 	"cart.title":"Título","cart.author":"Autor","cart.comment":"Comentario",
 	"cart.fromProgram":"Del programa","cart.madeWith":"Hecho con","cart.year":"Año",
 	"cart.stereoLayout":"Disposición estéreo","cart.songName":"Nombre de la canción","cart.authorName":"Nombre del autor",
@@ -39610,7 +40184,7 @@ var I18N={
 
 	"help.btnLang":"recorre el idioma de la interfaz: English → Français → Español → Deutsch → Italiano.",
 	"help.btnSkin":"hacer clic en la placa de la máquina cambia el tema de la interfaz (15 temas).",
-	"help.btnCompact":"cambia entre la barra compacta y la página ampliada.",
+	"help.btnCompact":"alterna la vista de la página: normal, ancho total del navegador, barra compacta.",
 	"help.btnScheme":"cambia la paleta de colores clara/oscura.",
 	"help.btnFold":"pliega o despliega un panel (cartucho, registros, ondas, lista de reproducción).",
 	"help.keysTitle":"Atajos de teclado",
@@ -39624,7 +40198,7 @@ var I18N={
 	"help.keyRandom":"activar/desactivar la pista siguiente aleatoria",
 	"help.keyZoom":"ampliar la vista de onda/portada (Shift+Z: reducir)",
 	"help.keyHelp":"abrir / cerrar esta ayuda",
-	"help.keyCompact":"activar/desactivar el modo compacto",
+	"help.keyCompact":"alternar la vista de la página (normal / ancho total / compacta)",
 	"help.btnHelp":"abre esta ayuda en una ventana emergente, o en un panel lateral a la derecha cuando el navegador bloquea las ventanas emergentes.",
 	"help.featuresTitle":"Funcionalidades",
 	"help.fLocal":"reproductor 100 % local: sin servidor, sin red — funciona desde un simple archivo HTML (respaldo ScriptProcessor en páginas file://).",
@@ -39642,7 +40216,7 @@ var I18N={
 	"ui.prev":"Vorherige Datei","ui.next":"Nächste Datei","ui.controls":"Wiedergabesteuerung",
 	"ui.lang":"Sprache der Oberfläche","ui.skins":"Skin der Oberfläche",
 	"ui.skinNext":"Design wechseln (auf den Rechnernamen klicken)",
-	"ui.compact":"Kompakt","ui.expand":"Erweitern",
+	"ui.compact":"Kompakt","ui.expand":"Erweitern","ui.fullwidth":"Volle Breite",
 	"ui.fold":"Panel einklappen","ui.unfold":"Panel ausklappen",
 	"ui.schemeToggle":"Hell-/Dunkelschema umschalten",
 	"ui.chip":"Chip :","ui.clock":"Takt :","ui.clockAuto":"Auto (der des Formats)","ui.chipAuto":"Auto (der des Formats)",
@@ -39657,7 +40231,7 @@ var I18N={
 	"cart.hintText":"Lade eine Musikdatei, um die Details ihres Formats anzuzeigen.",
 	"cart.format":"Format","cart.filename":"Dateiname","cart.fileSize":"Dateigröße",
 	"cart.bitrate":"Bitrate","cart.audio":"Audio","cart.album":"Album",
-	"cart.chip":"Chip","cart.masterClock":"Master-Takt",
+	"cart.chip":"Chip","cart.masterClock":"Master-Takt","cart.furVersion":"Furnace-Version",
 	"cart.title":"Titel","cart.author":"Autor","cart.comment":"Kommentar",
 	"cart.fromProgram":"Aus Programm","cart.madeWith":"Erstellt mit","cart.year":"Jahr",
 	"cart.stereoLayout":"Stereo-Layout","cart.songName":"Songname","cart.authorName":"Autorname",
@@ -39782,7 +40356,7 @@ var I18N={
 
 	"help.btnLang":"durchläuft die Sprache der Oberfläche: English → Français → Español → Deutsch → Italiano.",
 	"help.btnSkin":"ein Klick auf das Rechner-Badge wechselt den Skin der Oberfläche (15 Designs).",
-	"help.btnCompact":"wechselt zwischen der kompakten Leiste und der erweiterten Seite.",
+	"help.btnCompact":"schaltet die Seitenansicht um: normal, volle Browserbreite, kompakte Leiste.",
 	"help.btnScheme":"schaltet das Hell-/Dunkelschema um.",
 	"help.btnFold":"klappt ein Panel ein oder aus (Cartouche, Register, Wellen, Playlist).",
 	"help.keysTitle":"Tastenkürzel",
@@ -39796,7 +40370,7 @@ var I18N={
 	"help.keyRandom":"zufälligen nächsten Titel ein-/ausschalten",
 	"help.keyZoom":"Wellen-/Cover-Ansicht vergrößern (Shift+Z: verkleinern)",
 	"help.keyHelp":"diese Hilfe öffnen / schließen",
-	"help.keyCompact":"Kompaktmodus ein-/ausschalten",
+	"help.keyCompact":"Seitenansicht umschalten (normal / volle Breite / kompakt)",
 	"help.btnHelp":"öffnet diese Hilfe in einem Popup-Fenster, oder in einem Seitenpanel rechts, wenn der Browser Popups blockiert.",
 	"help.featuresTitle":"Funktionen",
 	"help.fLocal":"100% lokaler Player: kein Server, kein Netzwerk — läuft von einer schlichten HTML-Datei (ScriptProcessor-Fallback auf file://-Seiten).",
@@ -39814,7 +40388,7 @@ var I18N={
 	"ui.prev":"File precedente","ui.next":"File successivo","ui.controls":"Controlli di riproduzione",
 	"ui.lang":"Lingua dell'interfaccia","ui.skins":"Tema dell'interfaccia",
 	"ui.skinNext":"Cambia tema (clicca sul nome della macchina)",
-	"ui.compact":"Compatto","ui.expand":"Espandi",
+	"ui.compact":"Compatto","ui.expand":"Espandi","ui.fullwidth":"Larghezza intera",
 	"ui.fold":"Riduci il pannello","ui.unfold":"Espandi il pannello",
 	"ui.schemeToggle":"Commuta schema chiaro/scuro",
 	"ui.chip":"Chip :","ui.clock":"Clock :","ui.clockAuto":"Auto (quello del formato)","ui.chipAuto":"Auto (quello del formato)",
@@ -39829,7 +40403,7 @@ var I18N={
 	"cart.hintText":"Carica un file musicale per mostrarne i dettagli del formato.",
 	"cart.format":"Formato","cart.filename":"Nome file","cart.fileSize":"Dimensione file",
 	"cart.bitrate":"Bitrate","cart.audio":"Audio","cart.album":"Album",
-	"cart.chip":"Chip","cart.masterClock":"Clock principale",
+	"cart.chip":"Chip","cart.masterClock":"Clock principale","cart.furVersion":"Versione di Furnace",
 	"cart.title":"Titolo","cart.author":"Autore","cart.comment":"Commento",
 	"cart.fromProgram":"Dal programma","cart.madeWith":"Creato con","cart.year":"Anno",
 	"cart.stereoLayout":"Disposizione stereo","cart.songName":"Nome del brano","cart.authorName":"Nome dell'autore",
@@ -39954,7 +40528,7 @@ var I18N={
 
 	"help.btnLang":"scorre la lingua dell'interfaccia: English → Français → Español → Deutsch → Italiano.",
 	"help.btnSkin":"un clic sul badge della macchina cambia il tema dell'interfaccia (15 temi).",
-	"help.btnCompact":"passa dalla barra compatta alla pagina estesa.",
+	"help.btnCompact":"alterna la vista della pagina: normale, larghezza intera del browser, barra compatta.",
 	"help.btnScheme":"commuta lo schema chiaro/scuro.",
 	"help.btnFold":"riduce o espande un pannello (cartouche, registri, onde, playlist).",
 	"help.keysTitle":"Scorciatoie da tastiera",
@@ -39968,7 +40542,7 @@ var I18N={
 	"help.keyRandom":"attiva/disattiva la traccia successiva casuale",
 	"help.keyZoom":"ingrandisci la vista onda/copertina (Shift+Z: riduci)",
 	"help.keyHelp":"apri / chiudi questo aiuto",
-	"help.keyCompact":"attiva/disattiva la modalità compatta",
+	"help.keyCompact":"alternare la vista della pagina (normale / larghezza intera / compatta)",
 	"help.btnHelp":"apre questo aiuto in una finestra popup, o in un pannello laterale a destra quando il browser blocca i popup.",
 	"help.featuresTitle":"Caratteristiche",
 	"help.fLocal":"player 100% locale: nessun server, nessuna rete — funziona da un semplice file HTML (fallback ScriptProcessor sulle pagine file://).",
@@ -40155,24 +40729,32 @@ function toggleScheme() {// the "ON" footer button: light -> dark -> light, pers
 	try { localStorage.setItem("ayplayer.scheme",schemeOverride); } catch(e) {}
 	applyScheme();
 }
-var compactMode=false;// true when the interface is collapsed to the slim playback bar
+var viewMode="normal";// "normal" = the centered player page, "full" = full browser width (body.fullwidth), "compact" = the slim bar
 function updateCompactButton() {
 	var b=document.getElementById('compactToggle');
 	if(b==null) { return; }
-	var __lbl=compactMode?t('ui.expand'):t('ui.compact');
-	b.setAttribute("data-compact",compactMode?"1":"0");
-	b.setAttribute("aria-pressed",String(compactMode));
+	var __lbl=viewMode=="compact"?t('ui.expand'):(viewMode=="full"?t('ui.compact'):t('ui.fullwidth'));/* the icon and the title show the NEXT action of the cycle */
+	b.setAttribute("data-view",viewMode);
+	b.setAttribute("data-compact",viewMode=="compact"?"1":"0");
+	b.setAttribute("aria-pressed",String(viewMode=="compact"));
 	b.title=__lbl;
 	b.setAttribute("aria-label",__lbl);
 }
-function setCompact(on,fit) {// body.compact drives the whole CSS collapse; fit=true re-fits the PWA window
-	compactMode=!!on;
-	if(compactMode) { document.body.classList.add("compact"); } else { document.body.classList.remove("compact"); }
-	try { localStorage.setItem("ayplayer.compact",compactMode?"1":"0"); } catch(e) {}
+function setCompact(on,fit) {// legacy entry point (the inline restore script of the local html calls it)
+	setView(on?"compact":"normal",fit);
+}
+function setView(mode,fit) {// body.compact/body.fullwidth drive the whole CSS; fit=true re-fits the PWA window
+	viewMode=(mode=="full"||mode=="compact")?mode:"normal";
+	if(viewMode=="compact") { document.body.classList.add("compact"); document.body.classList.remove("fullwidth"); }
+	else if(viewMode=="full") { document.body.classList.add("fullwidth"); document.body.classList.remove("compact"); }
+	else { document.body.classList.remove("compact"); document.body.classList.remove("fullwidth"); }
+	try { localStorage.setItem("ayplayer.view",viewMode); } catch(e) {}
 	updateCompactButton();
 	if(fit&&typeof window.fitAyPlayerWindow==="function") { window.fitAyPlayerWindow(); }
 }
-function toggleCompact() { setCompact(!compactMode,true); }
+function toggleCompact() {// the ONE keycap cycles the page view: normal -> full browser width -> compact bar -> normal
+	setView(viewMode=="normal"?"full":(viewMode=="full"?"compact":"normal"),true);
+}
 
 var uiZoom=100;// global interface zoom in % (50-200, steps of 10) — document root CSS zoom: the
 function applyZoom() {
@@ -42296,6 +42878,7 @@ function sourceExt(name) {
 	var n=String(name==null?"":name).toLowerCase();
 	if(n.length>4&&n.slice(-4)==".aks") { return "aks"; }
 	if(n.length>4&&n.slice(-4)==".sks") { return "sks"; }
+	if(n.length>4&&n.slice(-4)==".fur") { return "fur"; }// lot 202611.93.102.3 : repli cartouche du .fur deflate
 	return "";
 }
 function vgmWarning(fileName, bb) {// assembles the user warnings: wrong extension + chip cause
@@ -44333,6 +44916,7 @@ function refreshCartouche(bytes) {
 	var __cs=document.getElementById("chipSel");
 	if(__cs!=null&&YM.chipSel!=null) { __cs.value=(chipSel=="auto")?"auto":YM.chipSel; }
 	var fmt=detectFormat(bytes);
+	if(fmt=="fmt.unknown"&&YM!=null&&YM.furVer>0x00&&sourceExt(fileName)=="fur") { fmt="fmt.fur"; }// lot 202611.93.102.3 : .fur deflate - furHeader ne voit pas la magic (pas d inflate), le moteur joue le module
 
 	if(YM==null||!YM.supported) {
 		var srcFmt=sourceExt(fileName);
@@ -44381,6 +44965,7 @@ function refreshCartouche(bytes) {
 		["cart.chip", chipCartLabel(YM)],
 		["cart.masterClock", clockLabel(YM.masterClock)]
 	];
+	if(YM.furVer>0&&fmt=="fmt.fur") { rows.push(["cart.furVersion", "v"+YM.furVer]); }// lot 202611.93.102.1 : version Furnace du module charge
 	if(lastVgmInfo!=null) {
 		if(lastVgmInfo.kind=="vgz") { rows.push([t('cart.vgzNote'), t('vgm.inflated')]); }
 		if(lastVgmInfo.wrongExt) {
@@ -45357,7 +45942,7 @@ function modTrackTick() {/*MOD path + the Arkos AKS/AKG path; the FC path*/
 			var note2=trackerNoteName(n2,(av.oct!=null)?av.oct:0);/* the octave base comes from the engine (0 = C-0 Arkos/AT3/CHP/AKY, 1 = C-1 the ZX/CPC trackers) */
 			var ins2=(cc2!=null&&cc2.i>=0&&cc2.i<0xfff0)?("0"+cc2.i).slice(-2):"00";
 			var vol2=(cc2!=null&&cc2.v>=0&&cc2.v<=64)?("0"+cc2.v.toString(16)).slice(-2):"..";/* colonne VOLUME (hex2) - AKS/AKG n en ont pas (".."), FUR/ASC/PT3 oui */
-			var eff2=(cc2!=null&&cc2.ef!="")?cc2.ef:"---";
+			var eff2=(cc2!=null&&cc2.ef!="")?(cc2.ef+"---").slice(0x00,0x03):"---";/* lot 202611.93.102 : colonne EFFET 3 chars fixes (cellule 13) */
 			var txt2=note2+" "+ins2+" "+vol2+" "+eff2;
 			if(cel2.textContent!=txt2) { cel2.textContent=txt2; }
 		}
@@ -45899,7 +46484,7 @@ document.addEventListener("keydown",kbKeydown,false);
 			<button id="btnZoomIn" class="key key-transport key-compact" type="button" onclick="zoomStep(1);" aria-label="Zoom in" title="Zoom in">+</button>
 			</span>
 			<button id="btnHelp" class="key key-transport key-compact" type="button" onclick="toggleHelp();" aria-label="Help" title="Help">?</button>
-			<button id="compactToggle" class="key key-transport key-compact compact-icon" type="button" onclick="toggleCompact();" aria-pressed="false" data-compact="0" title="Compact" aria-label="Compact"><span class="ci ci-off" aria-hidden="true"><svg viewBox="0 0 12 12"><rect x="1.5" y="1.5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></span><span class="ci ci-on" aria-hidden="true"><svg viewBox="0 0 12 12"><rect x="1.5" y="1.5" width="9" height="9" fill="currentColor"/></svg></span></button>
+			<button id="compactToggle" class="key key-transport key-compact compact-icon" type="button" onclick="toggleCompact();" aria-pressed="false" data-compact="0" data-view="normal" title="Compact" aria-label="Compact"><span class="ci ci-off" aria-hidden="true"><svg viewBox="0 0 12 12"><rect x="1.5" y="1.5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></span><span class="ci ci-full" aria-hidden="true"><svg viewBox="0 0 12 12"><path fill="currentColor" d="M10.8 6L7.6 2.8v1.9H4.4V2.8L1.2 6l3.2 3.2V7.3h3.2v1.9z"/></svg></span><span class="ci ci-on" aria-hidden="true"><svg viewBox="0 0 12 12"><rect x="1.5" y="1.5" width="9" height="9" fill="currentColor"/></svg></span></button>
 		</div>
 	</div>
 </header>
@@ -46052,7 +46637,7 @@ https://oku.edu.mie-u.ac.jp/~okumura/compression/ar002/<br>
 Adapted to javascript for YM emulation &copy; 2016-2026 Megachur
 		</p>
 	<p>AY Player — <a href="https://www.cpc-power.com/" target="_blank" rel="noopener">www.cpc-power.com</a> — Langages : HTML5 / JavaScript — Conforme W3C</p>
-	<span id="appVersion" class="foot-version">202610.93.100</span>
+	<span id="appVersion" class="foot-version">202611.93.103</span>
 	<button id="schemeToggle" class="power" type="button" onclick="toggleScheme();" aria-pressed="false" aria-label="Toggle light/dark color scheme" title="Toggle light/dark color scheme"><i class="power-led" aria-hidden="true"></i>ON</button>
 </footer>
 </main>
@@ -46061,7 +46646,7 @@ Adapted to javascript for YM emulation &copy; 2016-2026 Megachur
 
 	var ymMusicName=document.getElementById('ymMusicName');
 
-	(function(){try{setCompact(localStorage.getItem('ayplayer.compact')=='1',false);}catch(e){}})();
+	(function(){try{var v=localStorage.getItem('ayplayer.view');if(v!=='full'&&v!=='compact'){v=(localStorage.getItem('ayplayer.compact')=='1')?'compact':'normal';}setView(v,false);}catch(e){}})();
 
 
 	function ayPickMenu(e) {
@@ -46203,6 +46788,7 @@ Adapted to javascript for YM emulation &copy; 2016-2026 Megachur
 		}
 	} catch(e) {}
 </script>
-<div id="swUpdateNotice" hidden role="status"><span class="sw-update-txt">AY Player <b>202610.93.100</b></span><button type="button" class="key key-compact" onclick="location.reload();" title="Recharger / Reload / Recargar">⟳</button></div>
+<div id="swUpdateNotice" hidden role="status"><span class="sw-update-txt">AY Player <b>202611.93.103</b></span><button type="button" class="key key-compact" onclick="location.reload();" title="Recharger / Reload / Recargar">⟳</button></div>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" nonce="mPjg/0L/Jq39XSp/w744IQ==" data-cf-beacon='{"version":"2024.11.0","token":"36b4216ae2dc4d5488c249161e71fe1e","spa":2}' crossorigin="anonymous"></script>
 </BODY>
 </HTML>
